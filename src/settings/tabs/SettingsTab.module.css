@@ -1,0 +1,207 @@
+.root {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow-y: auto;
+  height: 100%;
+}
+
+.section {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.section:last-child {
+  border-bottom: none;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.sectionTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* ── Allocation ─────────────────────────────────────────────────────────────── */
+.appSelect {
+  font-size: 11px;
+  padding: 3px 6px;
+  border-radius: var(--radius-sm);
+}
+
+.allocationGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.allocationRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.slotLabel {
+  font-size: 11px;
+  color: var(--text-secondary);
+  width: 60px;
+  flex-shrink: 0;
+}
+
+.toolsetSelect {
+  flex: 1;
+  font-size: 11px;
+  padding: 3px 6px;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Sliders ────────────────────────────────────────────────────────────────── */
+.sliderGroup {
+  margin-bottom: 12px;
+}
+
+.sliderHeader {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+.sliderLabel {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.sliderValue {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.slider:hover::-webkit-slider-thumb {
+  background: var(--accent-hover);
+}
+
+/* ── Presets ────────────────────────────────────────────────────────────────── */
+.presetBtns {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.presetBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  color: var(--text-secondary);
+  transition: color var(--transition), background var(--transition);
+}
+
+.presetBtn:hover {
+  color: var(--text);
+  background: var(--surface-hover);
+}
+
+.presetBtn img {
+  filter: invert(0.6);
+}
+
+.presetBtn.danger {
+  background: rgba(224, 82, 82, 0.1);
+  border-color: rgba(224, 82, 82, 0.3);
+  color: var(--danger);
+}
+
+.presetBtn.danger:hover {
+  background: rgba(224, 82, 82, 0.2);
+}
+
+/* ── File location ──────────────────────────────────────────────────────────── */
+.fileLoc {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.fileLocLabel {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.fileLocRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.fileLocPath {
+  flex: 1;
+  font-size: 10px;
+  color: var(--text-secondary);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: monospace;
+}
+
+.browseBtn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: background var(--transition);
+}
+
+.browseBtn:hover { background: var(--surface-hover); }
+.browseBtn img { filter: invert(0.6); }
+
+/* ── Status ─────────────────────────────────────────────────────────────────── */
+.status {
+  margin-top: 8px;
+  font-size: 10px;
+  color: var(--success);
+}
+
+.status.statusErr {
+  color: var(--danger);
+}

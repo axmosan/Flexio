@@ -1,0 +1,76 @@
+/* ── Design tokens ─────────────────────────────────────────────────────────── */
+:root {
+  --bg: #1c1c1c;
+  --surface: #252525;
+  --surface-hover: #2d2d2d;
+  --surface-raised: #303030;
+  --border: #363636;
+  --accent: #4d9eff;
+  --accent-hover: #6aadff;
+  --text: #f0f0f0;
+  --text-secondary: #8c8c8c;
+  --text-muted: #555;
+  --danger: #e05252;
+  --danger-hover: #e87070;
+  --success: #52c46a;
+  --radius-sm: 4px;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --transition: 150ms ease;
+}
+
+/* ── Reset & base ──────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Adobe Clean', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-size: 12px;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+button {
+  all: unset;
+  cursor: pointer;
+}
+
+input, textarea {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  padding: 4px 8px;
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+  width: 100%;
+}
+
+input:focus, textarea:focus {
+  border-color: var(--accent);
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}

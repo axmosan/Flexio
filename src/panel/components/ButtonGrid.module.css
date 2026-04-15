@@ -1,0 +1,6 @@
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  /* gap is set inline via buttonSpacing */
+}

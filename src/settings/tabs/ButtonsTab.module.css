@@ -1,0 +1,83 @@
+.root {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.appBlock {
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  margin-bottom: 6px;
+}
+
+.appHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--surface);
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.appHeader:hover {
+  background: var(--surface-hover);
+}
+
+.appLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chevron {
+  display: inline-block;
+  font-size: 14px;
+  color: var(--text-secondary);
+  width: 14px;
+  text-align: center;
+  line-height: 1;
+}
+
+.appIcon {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+}
+
+.appName {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.addToolsetBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 10px;
+  color: var(--text-secondary);
+  transition: color var(--transition), background var(--transition);
+}
+
+.addToolsetBtn:hover {
+  color: var(--text);
+  background: var(--surface-hover);
+}
+
+.addToolsetBtn img {
+  filter: invert(0.7);
+}
+
+.noToolsets {
+  padding: 12px 16px;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+}

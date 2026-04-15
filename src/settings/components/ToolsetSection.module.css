@@ -1,0 +1,116 @@
+.root {
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 12px 7px 20px;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.header:hover {
+  background: var(--surface-hover);
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+
+.chevron {
+  display: inline-block;
+  font-size: 12px;
+  color: var(--text-muted);
+  width: 12px;
+}
+
+.name {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.nameInput {
+  font-size: 11px;
+  padding: 1px 4px;
+  height: 20px;
+  width: 140px;
+  background: var(--surface-raised);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.iconBtn {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition);
+}
+
+.iconBtn img {
+  filter: invert(0.6);
+}
+
+.iconBtn:hover {
+  background: var(--surface-raised);
+}
+
+.iconBtn:hover img {
+  filter: invert(0.85);
+}
+
+.iconBtn.danger:hover {
+  background: rgba(224, 82, 82, 0.15);
+}
+
+.iconBtn.danger:hover img {
+  filter: invert(0) sepia(1) saturate(5) hue-rotate(320deg) brightness(1.2);
+}
+
+.empty {
+  padding: 8px 28px;
+  font-size: 10px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.addBtn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 7px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: transparent;
+  border-top: 1px solid var(--border);
+  transition: color var(--transition), background var(--transition);
+}
+
+.addBtn:hover {
+  color: var(--accent);
+  background: rgba(77, 158, 255, 0.06);
+}
+
+.addBtn img {
+  filter: invert(0.55);
+  transition: filter var(--transition);
+}
+
+.addBtn:hover img {
+  filter: invert(0) sepia(1) saturate(3) hue-rotate(190deg) brightness(1.2);
+}

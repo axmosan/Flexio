@@ -1,0 +1,135 @@
+{
+  "_meta": {
+    "document": "Flexio 開発セッションメモ",
+    "created": "2026-04-16",
+    "purpose": "開発方針・決定事項の記録。後から見返せるためのメモ。"
+  },
+
+  "project_summary": {
+    "name": "Flexio",
+    "concept": "主要なAdobeアプリ（Ae / Pr / Ai / Ps）のJSX/JSXbinスクリプトランチャーを一つのパネルに統合する。KbarやJSX Launcherに相当するものを全Adobeアプリで共通して使えるようにするのが目的。",
+    "author": "Nakano Sho",
+    "license": "GNU General Public License v3",
+    "copyright": "Copyright (C) 2026 Nakano Sho"
+  },
+
+  "technical_decisions": {
+    "extension_type": "CEP Extension（UPXはまだ初期段階のためCEPを採用）",
+    "cep_version": "CEP 12",
+    "supported_versions": "Adobe 2025〜2026対応（AE v25.x〜、Pr v25.x〜、Ps v26.x〜、Ai v29.x〜）",
+    "initial_support": "After Effects のみ。将来的に Premiere Pro、Photoshop、Illustrator を追加予定。",
+    "ui_stack": {
+      "framework": "React + TypeScript",
+      "bundler": "Vite",
+      "animation": "Framer Motion + CSS transitions",
+      "styling": "CSS Modules"
+    },
+    "libraries": {
+      "archiving": "JSZip",
+      "encryption": "AES-256（crypto-js）、ハードコードされた秘密鍵による暗号化",
+      "icon_fallback": "Canvas API で自動テキストアイコン生成"
+    }
+  },
+
+  "panel_architecture": {
+    "description": "4つの独立したCEPパネルインスタンス（com.flexio.panel1〜4）を用意する。各パネルは個別にドッキング可能。",
+    "purpose": "複数のパネルを同時に表示できるようにするため（一つのパネルではToolsetを一つしか出せない）。",
+    "hamburger_menu": "AE標準の三本線（≡）パネルメニューをそのまま使用。カスタマイズ不要。",
+    "allocation": "Settings画面でFlexio 1〜4をどのToolsetに割り当てるか設定できる。",
+    "sync": "全パネルが flexio-blueprints.json を1秒ポーリングして変更を検知、リアルタイムで再描画。"
+  },
+
+  "settings_window": {
+    "type": "window.open() によるフローティングウィンドウ（ドッキング不可、独立した設定専用ウィンドウ）",
+    "open_trigger": "メインパネル右下の歯車アイコン（⚙）",
+    "tabs": ["Buttons", "Settings", "About"]
+  },
+
+  "file_system": {
+    "data_root": "C:/Users/{currentUser}/Documents/Flexio/",
+    "blueprints_file": "C:/Users/{currentUser}/Documents/Flexio/flexio-blueprints.json",
+    "script_structure": "Scripts/{AppName}/{ScriptName}/code/{script.jsx} + Scripts/{AppName}/{ScriptName}/icon/{icon.*}",
+    "apps": ["AfterEffects", "PremierePro", "Illustrator", "Photoshop"],
+    "example_path": "C:/Users/username/Documents/Flexio/Scripts/AfterEffects/SolidCreator/code/SolidCreator.jsx"
+  },
+
+  "flex_file_format": {
+    "extension": ".flex",
+    "role": "持ち運び用アーカイブ（zipの拡張子を変えたもの）。実動作には使わない。",
+    "zip_target": "C:/Users/{currentUser}/Documents/Flexio/ 全体",
+    "encryption": "AES-256ハードコード鍵で暗号化。スクリプト内容の解読防止（有料ライセンススクリプトの漏洩・ロンダリング防止も考慮）。",
+    "export_steps": [
+      "1. 現在のUI状態をflexio-blueprints.jsonに書き出し（上書き）",
+      "2. Documents/Flexio/ 全体をzipに圧縮",
+      "3. AES-256で暗号化",
+      "4. .flex拡張子で保存",
+      "5. エクスプローラーを保存先で開く"
+    ],
+    "import_steps": [
+      "1. ユーザーが.flexファイルを選択",
+      "2. 復号 → zip展開",
+      "3. 同名プリセット重複確認ダイアログ（Replace / Update & Add / Add if Missing / Cancel）",
+      "4. Documents/Flexio/ に展開",
+      "5. flexio-blueprints.jsonを読み込んでUI再構築"
+    ]
+  },
+
+  "blueprints_json_role": {
+    "description": "flexio-blueprints.json は全UIステートの唯一の正とするデータソース（single source of truth）。",
+    "contents": [
+      "バージョン・最終更新日時",
+      "パネル1〜4のToolset割り当て（Allocation）",
+      "全アプリの全Toolsetと全ボタン定義",
+      "ボタンごとのname, description, scriptPath, iconPath, iconType, autoIconText, order"
+    ],
+    "auto_save": "スクリプト追加・編集・削除など全ての変更時に即時上書き保存（自動保存）"
+  },
+
+  "script_execution": {
+    "method": "ボタン押下のたびにディスクからJSXを読み込み、csInterface.evalScript()でAEに渡す",
+    "no_cache": "メモリキャッシュなし。AEのキャッシュクリアに影響されないよう毎回読み直す。"
+  },
+
+  "button_features": {
+    "icon_types": ["PNG", "JPG", "SVG", "自動テキストアイコン（6文字以内、英語・ひらがな・カタカナ・漢字対応）"],
+    "hover_tooltip": "ホバー時にName + Descriptionをツールチップ表示",
+    "size_control": "ButtonScaleスライダー（32〜128px）",
+    "spacing_control": "ButtonSpacingスライダー（0〜32px）",
+    "layout": "左詰め、ウィンドウ右端で折り返し、最小で1列"
+  },
+
+  "button_management": {
+    "add": "スクリプトファイルを選択 → icon選択（任意）→ name/description入力 → 保存",
+    "edit": "アコーディオン展開でインライン編集",
+    "delete": "Scripts/{App}/{Name}/ディレクトリを再帰削除 + blueprints.jsonから除去",
+    "duplicate": "Scripts/{App}/{Name}/をコピー → blueprints.jsonに新エントリ追加（_copyサフィックス）"
+  },
+
+  "ui_design": {
+    "theme": "ダーク（Adobe CC ダークテーマ準拠）",
+    "design_references": [
+      "Assets/design/flexio_main.png — メインパネル",
+      "Assets/design/flexio_button.png — 設定Buttonsタブ",
+      "Assets/design/flexio_settings.png — 設定Settingsタブ",
+      "Assets/design/flexio_about.png — 設定Aboutタブ"
+    ],
+    "svg_assets": "Assets/svg/ に全アイコン収録"
+  },
+
+  "build_output": {
+    "dev_root": "P:/Dev/AfterEffects/Flexio/",
+    "dist_dir": "P:/Dev/AfterEffects/Flexio/dist/",
+    "install_dir": "C:/Users/{currentUser}/AppData/Roaming/Adobe/CEP/extensions/com.flexio/"
+  },
+
+  "phase_plan": {
+    "phase1": "CEPプロジェクト基盤セットアップ（manifest, package.json, Vite設定）",
+    "phase2": "メインパネル実装（4インスタンス、ボタングリッド、設定歯車）",
+    "phase3": "設定ウィンドウ実装（Buttons/Settings/Aboutタブ）",
+    "phase4": "ファイルシステム層実装（blueprints.json読み書き、Scripts管理）",
+    "phase5": ".flex Export/Import実装（JSZip + AES暗号化）",
+    "phase6": "パネル間リアルタイム同期実装",
+    "phase7": "デザイン調整・アニメーション適用",
+    "phase8": "テスト・バグ修正"
+  }
+}

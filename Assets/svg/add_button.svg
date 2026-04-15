@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="_レイヤー_1" data-name="レイヤー 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 716 716">
+  <defs>
+    <style>
+      .cls-1 {
+        stroke: #000;
+        stroke-miterlimit: 133.33;
+        stroke-width: 16px;
+      }
+    </style>
+  </defs>
+  <g id="SVGRepo_iconCarrier" data-name="SVGRepo iconCarrier">
+    <path class="cls-1" d="M574.67,141.33h133.33v33.33h-133.33v133.33h-33.33v-133.33h-133.33v-33.33h133.33V8h33.33v133.33ZM608,374.67h33.33v333.33H8V74.67h333.33v300h266.67ZM308,408H41.33v266.67h266.67v-266.67ZM308,108H41.33v266.67h266.67V108ZM608,408h-266.67v266.67h266.67v-266.67Z"/>
+  </g>
+</svg>

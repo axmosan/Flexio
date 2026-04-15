@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<ExtensionManifest xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  ExtensionBundleId="com.flexio"
+  ExtensionBundleName="Flexio"
+  ExtensionBundleVersion="1.0.0"
+  Version="12.0">
+
+  <ExtensionList>
+    <Extension Id="com.flexio.panel1" Version="1.0.0" />
+    <Extension Id="com.flexio.panel2" Version="1.0.0" />
+    <Extension Id="com.flexio.panel3" Version="1.0.0" />
+    <Extension Id="com.flexio.panel4" Version="1.0.0" />
+    <Extension Id="com.flexio.settings" Version="1.0.0" />
+  </ExtensionList>
+
+  <ExecutionEnvironment>
+    <HostList>
+      <Host Name="AEFT" Version="[25.0,99.9]" />
+      <Host Name="PPRO" Version="[25.0,99.9]" />
+      <Host Name="ILST" Version="[29.0,99.9]" />
+      <Host Name="PHXS" Version="[26.0,99.9]" />
+    </HostList>
+    <LocaleList>
+      <Locale Code="All" />
+    </LocaleList>
+    <RequiredRuntimeList>
+      <RequiredRuntime Name="CSXS" Version="12.0" />
+    </RequiredRuntimeList>
+  </ExecutionEnvironment>
+
+  <DispatchInfoList>
+
+    <!-- Panel 1 -->
+    <Extension Id="com.flexio.panel1">
+      <DispatchInfo>
+        <Resources>
+          <MainPath>./dist/src/panel/index.html</MainPath>
+          <ScriptPath>./jsx/host.jsx</ScriptPath>
+          <CEFCommandLine>
+            <Parameter>--enable-nodejs</Parameter>
+            <Parameter>--mixed-context</Parameter>
+          </CEFCommandLine>
+        </Resources>
+        <Lifecycle>
+          <AutoVisible>true</AutoVisible>
+        </Lifecycle>
+        <UI>
+          <Type>Panel</Type>
+          <Menu>Flexio 1</Menu>
+          <Geometry>
+            <Size>
+              <Height>300</Height>
+              <Width>400</Width>
+            </Size>
+            <MinSize>
+              <Height>100</Height>
+              <Width>120</Width>
+            </MinSize>
+          </Geometry>
+          <Icons />
+        </UI>
+      </DispatchInfo>
+    </Extension>
+
+    <!-- Panel 2 -->
+    <Extension Id="com.flexio.panel2">
+      <DispatchInfo>
+        <Resources>
+          <MainPath>./dist/src/panel/index.html</MainPath>
+          <ScriptPath>./jsx/host.jsx</ScriptPath>
+          <CEFCommandLine>
+            <Parameter>--enable-nodejs</Parameter>
+            <Parameter>--mixed-context</Parameter>
+          </CEFCommandLine>
+        </Resources>
+        <Lifecycle>
+          <AutoVisible>true</AutoVisible>
+        </Lifecycle>
+        <UI>
+          <Type>Panel</Type>
+          <Menu>Flexio 2</Menu>
+          <Geometry>
+            <Size>
+              <Height>300</Height>
+              <Width>400</Width>
+            </Size>
+            <MinSize>
+              <Height>100</Height>
+              <Width>120</Width>
+            </MinSize>
+          </Geometry>
+          <Icons />
+        </UI>
+      </DispatchInfo>
+    </Extension>
+
+    <!-- Panel 3 -->
+    <Extension Id="com.flexio.panel3">
+      <DispatchInfo>
+        <Resources>
+          <MainPath>./dist/src/panel/index.html</MainPath>
+          <ScriptPath>./jsx/host.jsx</ScriptPath>
+          <CEFCommandLine>
+            <Parameter>--enable-nodejs</Parameter>
+            <Parameter>--mixed-context</Parameter>
+          </CEFCommandLine>
+        </Resources>
+        <Lifecycle>
+          <AutoVisible>true</AutoVisible>
+        </Lifecycle>
+        <UI>
+          <Type>Panel</Type>
+          <Menu>Flexio 3</Menu>
+          <Geometry>
+            <Size>
+              <Height>300</Height>
+              <Width>400</Width>
+            </Size>
+            <MinSize>
+              <Height>100</Height>
+              <Width>120</Width>
+            </MinSize>
+          </Geometry>
+          <Icons />
+        </UI>
+      </DispatchInfo>
+    </Extension>
+
+    <!-- Panel 4 -->
+    <Extension Id="com.flexio.panel4">
+      <DispatchInfo>
+        <Resources>
+          <MainPath>./dist/src/panel/index.html</MainPath>
+          <ScriptPath>./jsx/host.jsx</ScriptPath>
+          <CEFCommandLine>
+            <Parameter>--enable-nodejs</Parameter>
+            <Parameter>--mixed-context</Parameter>
+          </CEFCommandLine>
+        </Resources>
+        <Lifecycle>
+          <AutoVisible>true</AutoVisible>
+        </Lifecycle>
+        <UI>
+          <Type>Panel</Type>
+          <Menu>Flexio 4</Menu>
+          <Geometry>
+            <Size>
+              <Height>300</Height>
+              <Width>400</Width>
+            </Size>
+            <MinSize>
+              <Height>100</Height>
+              <Width>120</Width>
+            </MinSize>
+          </Geometry>
+          <Icons />
+        </UI>
+      </DispatchInfo>
+    </Extension>
+
+    <!-- Settings Window — Modeless floating dialog -->
+    <Extension Id="com.flexio.settings">
+      <DispatchInfo>
+        <Resources>
+          <MainPath>./dist/src/settings/index.html</MainPath>
+          <ScriptPath>./jsx/host.jsx</ScriptPath>
+          <CEFCommandLine>
+            <Parameter>--enable-nodejs</Parameter>
+            <Parameter>--mixed-context</Parameter>
+            <Parameter>--allow-file-access</Parameter>
+            <Parameter>--allow-file-access-from-files</Parameter>
+          </CEFCommandLine>
+        </Resources>
+        <Lifecycle>
+          <AutoVisible>true</AutoVisible>
+        </Lifecycle>
+        <UI>
+          <Type>Modeless</Type>
+          <Menu>Flexio Settings</Menu>
+          <Geometry>
+            <Size>
+              <Height>700</Height>
+              <Width>620</Width>
+            </Size>
+          </Geometry>
+          <Icons />
+        </UI>
+      </DispatchInfo>
+    </Extension>
+
+  </DispatchInfoList>
+
+</ExtensionManifest>

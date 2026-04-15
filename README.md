@@ -1,5 +1,6 @@
 # Flexio
 <img width="672" height="410" alt="スクリーンショット 2026-04-16 081618" src="https://github.com/user-attachments/assets/37971cf9-0546-49d0-b0e1-233a7699f1c0" />
+
 Flexio is a script launcher panel that works across Adobe After Effects, Premiere Pro, Photoshop, and Illustrator.
 
 # Background

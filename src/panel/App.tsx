@@ -17,7 +17,7 @@ export default function App() {
     [blueprints, app, toolsetId],
   )
 
-  const { buttonScale, buttonSpacing } = blueprints.settings
+  const { scale, spacing, flipToReorder, uiMode, columns } = blueprints.panelSettings[slot]
 
   if (!isLoaded) return null
 
@@ -33,8 +33,12 @@ export default function App() {
           <ButtonGrid
             buttons={toolset.buttons}
             app={app}
-            buttonScale={buttonScale}
-            buttonSpacing={buttonSpacing}
+            toolsetId={toolsetId}
+            scale={scale}
+            spacing={spacing}
+            flipToReorder={flipToReorder}
+            uiMode={uiMode}
+            columns={columns}
           />
         ) : (
           <div className={styles.empty}>

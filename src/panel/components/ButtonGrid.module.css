@@ -1,6 +1,39 @@
+/* ── Icon grid mode ──────────────────────────────────────────────────────── */
 .grid {
   display: flex;
   flex-wrap: wrap;
   align-content: flex-start;
-  /* gap is set inline via buttonSpacing */
+}
+
+.item {
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* ── List mode (icon+name / name) ────────────────────────────────────────── */
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+.listItem {
+  position: relative;
+  width: 100%;
+}
+
+/* ── Shared drag styles ──────────────────────────────────────────────────── */
+.item.draggable,
+.listItem.draggable {
+  cursor: grab;
+}
+
+.item.draggable:active,
+.listItem.draggable:active {
+  cursor: grabbing;
+}
+
+.item.dragging,
+.listItem.dragging {
+  opacity: 0.45;
+  transition: opacity 0.1s;
 }

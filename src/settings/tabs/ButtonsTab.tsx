@@ -28,6 +28,12 @@ export function ButtonsTab({ initialApp }: Props) {
   const { blueprints, addToolset } = useBlueprints()
   const [expandedApps, setExpandedApps] = useState<Set<AppName>>(new Set([initialApp]))
 
+  // Put the current app first in the list
+  const sortedApps: AppName[] = [
+    initialApp,
+    ...APP_NAMES.filter((a) => a !== initialApp),
+  ]
+
   function toggleApp(app: AppName) {
     setExpandedApps((prev) => {
       const next = new Set(prev)
@@ -45,7 +51,7 @@ export function ButtonsTab({ initialApp }: Props) {
 
   return (
     <div className={styles.root}>
-      {APP_NAMES.map((app) => {
+      {sortedApps.map((app) => {
         const isExpanded = expandedApps.has(app)
         const toolsets = blueprints.apps[app].toolsets
 

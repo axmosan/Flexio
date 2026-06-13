@@ -1,9 +1,9 @@
 import React, { useState, useRef } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, Reorder, useDragControls } from 'framer-motion'
 import { useBlueprints } from '@/shared/context/BlueprintsContext'
 import { ButtonRow } from './ButtonRow'
 import { ButtonEditForm } from './ButtonEditForm'
-import type { AppName, ToolsetDef } from '@/shared/types'
+import type { AppName, ButtonDef, ToolsetDef } from '@/shared/types'
 import styles from './ToolsetSection.module.css'
 import addButtonIcon from '@/shared/assets/svg/add_button.svg'
 import editIcon from '@/shared/assets/svg/edit.svg'
@@ -13,6 +13,43 @@ interface Props {
   app: AppName
   toolset: ToolsetDef
 }
+
+// ── Per-item drag wrapper (useDragControls must be in its own component) ──────
+function DraggableRow({
+  button, app, toolsetId,
+}: {
+  button: ButtonDef
+  app: AppName
+  toolsetId: string
+}) {
+  const controls = useDragControls()
+
+  return (
+    <Reorder.Item
+      as="div"
+      value={button.id}
+      dragListener={false}
+      dragControls={controls}
+      layout
+      layoutId={button.id}
+      transition={{ duration: 0.18, ease: 'easeInOut' }}
+    >
+      <ButtonRow
+        app={app}
+        toolsetId={toolsetId}
+        button={button}
+        dragHandleProps={{
+          onPointerDown: (e) => {
+            e.preventDefault()
+            controls.start(e)
+          },
+        }}
+      />
+    </Reorder.Item>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 export function ToolsetSection({ app, toolset }: Props) {
   const { renameToolset, deleteToolset, reorderButtons } = useBlueprints()
@@ -37,20 +74,6 @@ export function ToolsetSection({ app, toolset }: Props) {
   }
 
   const sorted = [...toolset.buttons].sort((a, b) => a.order - b.order)
-
-  function handleMoveUp(index: number) {
-    if (index <= 0) return
-    const ids = sorted.map((b) => b.id)
-    ;[ids[index - 1], ids[index]] = [ids[index], ids[index - 1]]
-    reorderButtons(app, toolset.id, ids)
-  }
-
-  function handleMoveDown(index: number) {
-    if (index >= sorted.length - 1) return
-    const ids = sorted.map((b) => b.id)
-    ;[ids[index], ids[index + 1]] = [ids[index + 1], ids[index]]
-    reorderButtons(app, toolset.id, ids)
-  }
 
   return (
     <div className={styles.root}>
@@ -119,18 +142,24 @@ export function ToolsetSection({ app, toolset }: Props) {
               <div className={styles.empty}>No buttons added to {toolset.name}.</div>
             )}
 
-            {sorted.map((btn, idx) => (
-              <ButtonRow
-                key={btn.id}
-                app={app}
-                toolsetId={toolset.id}
-                button={btn}
-                canMoveUp={idx > 0}
-                canMoveDown={idx < sorted.length - 1}
-                onMoveUp={() => handleMoveUp(idx)}
-                onMoveDown={() => handleMoveDown(idx)}
-              />
-            ))}
+            {sorted.length > 0 && (
+              <Reorder.Group
+                as="div"
+                axis="y"
+                values={sorted.map((b) => b.id)}
+                onReorder={(newIds) => reorderButtons(app, toolset.id, newIds)}
+                style={{ listStyle: 'none', padding: 0, margin: 0 }}
+              >
+                {sorted.map((btn) => (
+                  <DraggableRow
+                    key={btn.id}
+                    button={btn}
+                    app={app}
+                    toolsetId={toolset.id}
+                  />
+                ))}
+              </Reorder.Group>
+            )}
 
             {/* Add button form */}
             <AnimatePresence>
@@ -151,7 +180,7 @@ export function ToolsetSection({ app, toolset }: Props) {
               )}
             </AnimatePresence>
 
-            {/* Add button footer */}
+            {/* Add button footer — always stays last */}
             {!addingButton && (
               <button
                 className={styles.addBtn}

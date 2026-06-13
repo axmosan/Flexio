@@ -8,20 +8,16 @@ import styles from './ButtonRow.module.css'
 import editIcon from '@/shared/assets/svg/edit.svg'
 import duplicateIcon from '@/shared/assets/svg/duplicate.svg'
 import trashIcon from '@/shared/assets/svg/trash.svg'
+import dragHandleIcon from '@/shared/assets/svg/drag_handle.svg'
 
 interface Props {
   app: AppName
   toolsetId: string
   button: ButtonDef
-  /** Can this button be moved up? */
-  canMoveUp: boolean
-  /** Can this button be moved down? */
-  canMoveDown: boolean
-  onMoveUp: () => void
-  onMoveDown: () => void
+  dragHandleProps?: React.HTMLAttributes<HTMLDivElement>
 }
 
-export function ButtonRow({ app, toolsetId, button, canMoveUp, canMoveDown, onMoveUp, onMoveDown }: Props) {
+export function ButtonRow({ app, toolsetId, button, dragHandleProps }: Props) {
   const { deleteButton, duplicateButton } = useBlueprints()
   const [expanded, setExpanded] = useState(false)
   const [editing, setEditing] = useState(false)
@@ -44,20 +40,13 @@ export function ButtonRow({ app, toolsetId, button, canMoveUp, canMoveDown, onMo
     <div className={styles.root}>
       {/* Button summary row */}
       <div className={styles.row} onClick={() => { setExpanded((v) => !v); setEditing(false) }}>
-        {/* Reorder arrows */}
-        <div className={styles.reorderBtns} onClick={(e) => e.stopPropagation()}>
-          <button
-            className={`${styles.arrowBtn} ${!canMoveUp ? styles.arrowDisabled : ''}`}
-            onClick={onMoveUp}
-            disabled={!canMoveUp}
-            title="Move up"
-          >▲</button>
-          <button
-            className={`${styles.arrowBtn} ${!canMoveDown ? styles.arrowDisabled : ''}`}
-            onClick={onMoveDown}
-            disabled={!canMoveDown}
-            title="Move down"
-          >▼</button>
+        {/* Drag handle */}
+        <div
+          className={styles.dragHandle}
+          onClick={(e) => e.stopPropagation()}
+          {...dragHandleProps}
+        >
+          <img src={dragHandleIcon} alt="" width={8} height={14} />
         </div>
         {/* Mini icon preview */}
         <div className={styles.miniIcon} style={{ background: button.iconType === 'text' ? bgColor : 'transparent' }}>

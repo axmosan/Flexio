@@ -20,7 +20,6 @@ import {
   updateIconFile,
   deleteScriptDir,
   duplicateScriptDir,
-  safeFolderName,
   buildAutoIconText,
 } from '../lib/scriptManager'
 import { dispatchBlueprintsChanged, onBlueprintsChanged } from '../lib/cepInterface'
@@ -29,7 +28,7 @@ import type {
   AllocationMap,
   BlueprintsData,
   ButtonDef,
-  GlobalSettings,
+  PanelSettings,
   PanelSlot,
   ToolsetDef,
 } from '../types'
@@ -71,7 +70,7 @@ interface BlueprintsContextValue {
   reorderButtons: (app: AppName, toolsetId: string, orderedIds: string[]) => void
 
   // Settings operations
-  updateSettings: (updates: Partial<GlobalSettings>) => void
+  updatePanelSettings: (slot: PanelSlot, updates: Partial<PanelSettings>) => void
   updateAllocation: (app: AppName, updates: Partial<AllocationMap>) => void
 
   // Raw updater (for advanced use)
@@ -87,7 +86,6 @@ export function BlueprintsProvider({ children }: { children: React.ReactNode }) 
   const [isLoaded, setIsLoaded] = useState(false)
   const lastTimestampRef = useRef<string>('')
 
-  // Initial load
   useEffect(() => {
     const data = loadBlueprints()
     setBlueprints(data)
@@ -95,7 +93,6 @@ export function BlueprintsProvider({ children }: { children: React.ReactNode }) 
     setIsLoaded(true)
   }, [])
 
-  // Poll for external changes (panel sync)
   useEffect(() => {
     const interval = setInterval(() => {
       const ts = getBlueprintsTimestamp()
@@ -107,7 +104,6 @@ export function BlueprintsProvider({ children }: { children: React.ReactNode }) 
     return () => clearInterval(interval)
   }, [])
 
-  // Subscribe to blueprintsChanged events from other panels/settings window
   useEffect(() => {
     return onBlueprintsChanged(() => {
       const ts = getBlueprintsTimestamp()
@@ -116,7 +112,6 @@ export function BlueprintsProvider({ children }: { children: React.ReactNode }) 
     })
   }, [])
 
-  // Commit changes to disk and update React state
   const update = useCallback((updater: (prev: BlueprintsData) => BlueprintsData) => {
     setBlueprints((prev) => {
       const next = updater(prev)
@@ -170,10 +165,11 @@ export function BlueprintsProvider({ children }: { children: React.ReactNode }) 
         const toolset = bp.apps[app].toolsets.find((ts) => ts.id === toolsetId)
         if (toolset) {
           for (const btn of toolset.buttons) {
-            try { deleteScriptDir(app, safeFolderName(btn.name)) } catch { /* ok */ }
+            if (btn.scriptPath) {
+              try { deleteScriptDir(btn.scriptPath) } catch { /* ok */ }
+            }
           }
         }
-        // Remove from allocation if assigned
         const newAlloc = { ...bp.allocation[app] } as AllocationMap
         for (const slot of Object.keys(newAlloc) as PanelSlot[]) {
           if (newAlloc[slot] === toolsetId) newAlloc[slot] = ''
@@ -202,16 +198,16 @@ export function BlueprintsProvider({ children }: { children: React.ReactNode }) 
       name: string,
       description: string,
     ) => {
-      const folderName = safeFolderName(name)
-      const { scriptPath, scriptName } = saveScriptFile(app, scriptSrcPath, folderName)
+      const buttonId = uuidv4()
+      const { scriptPath, scriptName } = saveScriptFile(app, scriptSrcPath, buttonId)
       let iconPath = ''
       if (iconSrcPath) {
-        const saved = saveIconFile(app, scriptName, iconSrcPath)
+        const saved = saveIconFile(app, buttonId, iconSrcPath)
         iconPath = saved.iconPath
       }
       const autoText = buildAutoIconText(name || scriptName)
       const button: ButtonDef = {
-        id: uuidv4(),
+        id: buttonId,
         name: name || scriptName,
         description,
         scriptPath,
@@ -250,16 +246,17 @@ export function BlueprintsProvider({ children }: { children: React.ReactNode }) 
           if (ts.id !== toolsetId) return ts
           const buttons = ts.buttons.map((btn) => {
             if (btn.id !== buttonId) return btn
-            const folderName = safeFolderName(btn.name)
             let { scriptPath, iconPath, iconType, autoIconText } = btn
             if (fields.scriptSrcPath) {
-              scriptPath = updateScriptFile(app, folderName, fields.scriptSrcPath)
+              // Derive dir from existing scriptPath (UUID or legacy name-based)
+              scriptPath = updateScriptFile(btn.scriptPath, fields.scriptSrcPath)
             }
             if (fields.clearIcon) {
               iconPath = ''
               iconType = 'text'
             } else if (fields.iconSrcPath) {
-              iconPath = updateIconFile(app, folderName, fields.iconSrcPath)
+              const refPath = btn.iconPath || btn.scriptPath
+              iconPath = updateIconFile(refPath, fields.iconSrcPath)
               iconType = 'image'
             }
             const newName = fields.name ?? btn.name
@@ -285,15 +282,15 @@ export function BlueprintsProvider({ children }: { children: React.ReactNode }) 
   const deleteButton = useCallback(
     (app: AppName, toolsetId: string, buttonId: string) => {
       update((bp) => {
-        let deletedName = ''
+        let targetScriptPath = ''
         const toolsets = bp.apps[app].toolsets.map((ts) => {
           if (ts.id !== toolsetId) return ts
           const target = ts.buttons.find((b) => b.id === buttonId)
-          if (target) deletedName = safeFolderName(target.name)
+          if (target) targetScriptPath = target.scriptPath
           return { ...ts, buttons: ts.buttons.filter((b) => b.id !== buttonId) }
         })
-        if (deletedName) {
-          try { deleteScriptDir(app, deletedName) } catch { /* ok */ }
+        if (targetScriptPath) {
+          try { deleteScriptDir(targetScriptPath) } catch { /* ok */ }
         }
         return { ...bp, apps: { ...bp.apps, [app]: { toolsets } } }
       })
@@ -308,24 +305,28 @@ export function BlueprintsProvider({ children }: { children: React.ReactNode }) 
           if (ts.id !== toolsetId) return ts
           const original = ts.buttons.find((b) => b.id === buttonId)
           if (!original) return ts
+          const newId   = uuidv4()
           const newName = original.name + ' Copy'
-          const newFolderName = safeFolderName(newName)
+          let newScriptPath = original.scriptPath
+          let newIconPath   = original.iconPath
           try {
-            duplicateScriptDir(app, safeFolderName(original.name), newFolderName)
-          } catch { /* ok */ }
+            const duped = duplicateScriptDir(
+              original.scriptPath,
+              original.iconPath,
+              app,
+              newId,
+            )
+            newScriptPath = duped.scriptPath
+            newIconPath   = duped.iconPath
+          } catch { /* ok — keep original paths */ }
           const copy: ButtonDef = {
             ...original,
-            id: uuidv4(),
-            name: newName,
-            scriptPath: original.scriptPath.replace(
-              safeFolderName(original.name),
-              newFolderName,
-            ),
-            iconPath: original.iconPath.replace(
-              safeFolderName(original.name),
-              newFolderName,
-            ),
-            order: ts.buttons.length,
+            id:          newId,
+            name:        newName,
+            scriptPath:  newScriptPath,
+            iconPath:    newIconPath,
+            autoIconText: buildAutoIconText(newName),
+            order:       ts.buttons.length,
           }
           return { ...ts, buttons: [...ts.buttons, copy] }
         })
@@ -344,9 +345,11 @@ export function BlueprintsProvider({ children }: { children: React.ReactNode }) 
             const btn = ts.buttons.find((b) => b.id === id)
             return btn ? { ...btn, order: idx } : null
           }).filter(Boolean) as ButtonDef[]
-          // Keep any buttons not in orderedIds at the end
           const remaining = ts.buttons.filter((b) => !orderedIds.includes(b.id))
-          return { ...ts, buttons: [...buttons, ...remaining.map((b, i) => ({ ...b, order: buttons.length + i }))] }
+          return {
+            ...ts,
+            buttons: [...buttons, ...remaining.map((b, i) => ({ ...b, order: buttons.length + i }))],
+          }
         })
         return { ...bp, apps: { ...bp.apps, [app]: { toolsets } } }
       })
@@ -356,9 +359,15 @@ export function BlueprintsProvider({ children }: { children: React.ReactNode }) 
 
   // ── Settings operations ─────────────────────────────────────────────────────
 
-  const updateSettings = useCallback(
-    (updates: Partial<GlobalSettings>) => {
-      update((bp) => ({ ...bp, settings: { ...bp.settings, ...updates } }))
+  const updatePanelSettings = useCallback(
+    (slot: PanelSlot, updates: Partial<PanelSettings>) => {
+      update((bp) => ({
+        ...bp,
+        panelSettings: {
+          ...bp.panelSettings,
+          [slot]: { ...bp.panelSettings[slot], ...updates },
+        },
+      }))
     },
     [update],
   )
@@ -389,7 +398,7 @@ export function BlueprintsProvider({ children }: { children: React.ReactNode }) 
         deleteButton,
         duplicateButton,
         reorderButtons,
-        updateSettings,
+        updatePanelSettings,
         updateAllocation,
         update,
       }}

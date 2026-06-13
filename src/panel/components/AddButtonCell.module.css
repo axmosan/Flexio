@@ -25,3 +25,25 @@
   border-color: var(--accent);
   background: rgba(77, 158, 255, 0.06);
 }
+
+/* List mode add button */
+.listBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 4px 8px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  outline: none;
+  text-align: left;
+  border-radius: var(--radius);
+  min-height: 28px;
+  transition: background var(--transition);
+}
+
+.listLabel {
+  font-size: 11px;
+  color: var(--text-muted);
+}

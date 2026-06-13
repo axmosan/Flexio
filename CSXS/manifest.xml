@@ -2,15 +2,15 @@
 <ExtensionManifest xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   ExtensionBundleId="com.flexio"
   ExtensionBundleName="Flexio"
-  ExtensionBundleVersion="1.0.0"
+  ExtensionBundleVersion="1.1.0"
   Version="12.0">
 
   <ExtensionList>
-    <Extension Id="com.flexio.panel1" Version="1.0.0" />
-    <Extension Id="com.flexio.panel2" Version="1.0.0" />
-    <Extension Id="com.flexio.panel3" Version="1.0.0" />
-    <Extension Id="com.flexio.panel4" Version="1.0.0" />
-    <Extension Id="com.flexio.settings" Version="1.0.0" />
+    <Extension Id="com.flexio.panel1" Version="1.1.0" />
+    <Extension Id="com.flexio.panel2" Version="1.1.0" />
+    <Extension Id="com.flexio.panel3" Version="1.1.0" />
+    <Extension Id="com.flexio.panel4" Version="1.1.0" />
+    <Extension Id="com.flexio.settings" Version="1.1.0" />
   </ExtensionList>
 
   <ExecutionEnvironment>
@@ -53,8 +53,8 @@
               <Width>400</Width>
             </Size>
             <MinSize>
-              <Height>100</Height>
-              <Width>120</Width>
+              <Height>48</Height>
+              <Width>48</Width>
             </MinSize>
           </Geometry>
           <Icons />
@@ -85,8 +85,8 @@
               <Width>400</Width>
             </Size>
             <MinSize>
-              <Height>100</Height>
-              <Width>120</Width>
+              <Height>48</Height>
+              <Width>48</Width>
             </MinSize>
           </Geometry>
           <Icons />
@@ -117,8 +117,8 @@
               <Width>400</Width>
             </Size>
             <MinSize>
-              <Height>100</Height>
-              <Width>120</Width>
+              <Height>48</Height>
+              <Width>48</Width>
             </MinSize>
           </Geometry>
           <Icons />
@@ -149,8 +149,8 @@
               <Width>400</Width>
             </Size>
             <MinSize>
-              <Height>100</Height>
-              <Width>120</Width>
+              <Height>48</Height>
+              <Width>48</Width>
             </MinSize>
           </Geometry>
           <Icons />

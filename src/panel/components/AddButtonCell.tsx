@@ -1,16 +1,35 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { getHostApp, getPanelSlot, openSettingsWindow } from '@/shared/lib/cepInterface'
+import { getPanelSlot, openSettingsWindow } from '@/shared/lib/cepInterface'
 import type { AppName } from '@/shared/types'
 import styles from './AddButtonCell.module.css'
 
 interface Props {
   size: number
   app: AppName
+  listMode?: boolean
 }
 
-export function AddButtonCell({ size, app }: Props) {
+export function AddButtonCell({ size, app, listMode }: Props) {
   const slot = getPanelSlot()
+
+  if (listMode) {
+    return (
+      <motion.button
+        className={styles.listBtn}
+        onClick={() => openSettingsWindow(app, slot)}
+        whileHover={{ backgroundColor: 'var(--surface-hover)' }}
+        whileTap={{ scale: 0.98 }}
+        transition={{ duration: 0.12 }}
+        title="Add script button"
+      >
+        <svg width="12" height="12" viewBox="0 0 20 20" fill="none">
+          <path d="M10 4v12M4 10h12" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+        <span className={styles.listLabel}>Add Button</span>
+      </motion.button>
+    )
+  }
 
   return (
     <motion.button

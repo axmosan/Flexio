@@ -1,89 +1,135 @@
 /**
  * Manages script and icon files under:
- *   C:\Users\{user}\Documents\Flexio\Scripts\{App}\{Name}\code\
- *   C:\Users\{user}\Documents\Flexio\Scripts\{App}\{Name}\icon\
+ *   <FlexioRoot>/Scripts/{App}/{buttonId}/code/
+ *   <FlexioRoot>/Scripts/{App}/{buttonId}/icon/
+ *
+ * New buttons use button.id (UUID) as the directory key.
+ * Existing buttons keep their stored paths — the dir is derived from the
+ * stored relative path so name-based legacy dirs still work.
  */
 import { nfs, npath, ensureDir, rmrf } from './nodeEnv'
 import {
   getCodeDir,
   getIconDir,
   getScriptDir,
+  getScriptDirFromRelPath,
   toRelativePath,
   baseName,
   fileExt,
 } from './paths'
-import type { AppName, ButtonDef } from '../types'
+import type { AppName } from '../types'
 
-// ─── Copy a script file into the Flexio data directory ───────────────────────
+// ─── Save a new script file (buttonId as dir key) ────────────────────────────
 
 export interface SavedScript {
   scriptPath: string // relative path
-  scriptName: string // name derived from file (for button default name)
+  scriptName: string // display name from file (for button default label)
 }
 
-export function saveScriptFile(app: AppName, srcPath: string, buttonName: string): SavedScript {
-  const name = buttonName || baseName(srcPath)
-  const ext = fileExt(srcPath)
-  const codeDir = getCodeDir(app, name)
+export function saveScriptFile(app: AppName, srcPath: string, buttonId: string): SavedScript {
+  const srcBase = npath.basename(srcPath)
+  const scriptName = baseName(srcPath)
+  const codeDir = getCodeDir(app, buttonId)
   ensureDir(codeDir)
-  const destFile = npath.join(codeDir, `${name}.${ext}`)
+  const destFile = npath.join(codeDir, srcBase)
   nfs.copyFileSync(srcPath, destFile)
   return {
     scriptPath: toRelativePath(destFile),
-    scriptName: name,
+    scriptName,
   }
 }
 
-// ─── Copy an icon file into the Flexio data directory ────────────────────────
+// ─── Save a new icon file (buttonId as dir key) ──────────────────────────────
 
 export interface SavedIcon {
-  iconPath: string // relative path
+  iconPath: string
 }
 
-export function saveIconFile(app: AppName, scriptName: string, srcPath: string): SavedIcon {
-  const ext = fileExt(srcPath)
-  const iconDir = getIconDir(app, scriptName)
+export function saveIconFile(app: AppName, buttonId: string, srcPath: string): SavedIcon {
+  const iconDir = getIconDir(app, buttonId)
   ensureDir(iconDir)
-  const destFile = npath.join(iconDir, `icon.${ext}`)
+  const destFile = npath.join(iconDir, npath.basename(srcPath))
   nfs.copyFileSync(srcPath, destFile)
   return { iconPath: toRelativePath(destFile) }
 }
 
-// ─── Update an existing script's code file ───────────────────────────────────
+// ─── Update an existing script (dir derived from stored path) ────────────────
 
-export function updateScriptFile(app: AppName, scriptName: string, srcPath: string): string {
-  const ext = fileExt(srcPath)
-  const codeDir = getCodeDir(app, scriptName)
+export function updateScriptFile(existingScriptPath: string, newSrcPath: string): string {
+  const srcBase = npath.basename(newSrcPath)
+  const scriptDir = getScriptDirFromRelPath(existingScriptPath)
+  const codeDir = npath.join(scriptDir, 'code')
   ensureDir(codeDir)
-  const destFile = npath.join(codeDir, `${scriptName}.${ext}`)
-  nfs.copyFileSync(srcPath, destFile)
+  // Remove old script files
+  if (nfs.existsSync(codeDir)) {
+    for (const f of nfs.readdirSync(codeDir)) {
+      try { nfs.unlinkSync(npath.join(codeDir, f)) } catch { /* ok */ }
+    }
+  }
+  const destFile = npath.join(codeDir, srcBase)
+  nfs.copyFileSync(newSrcPath, destFile)
   return toRelativePath(destFile)
 }
 
-// ─── Update an existing script's icon file ───────────────────────────────────
+// ─── Update an existing icon (dir derived from stored path) ──────────────────
 
-export function updateIconFile(app: AppName, scriptName: string, srcPath: string): string {
-  const ext = fileExt(srcPath)
-  const iconDir = getIconDir(app, scriptName)
+export function updateIconFile(existingIconPath: string, newSrcPath: string): string {
+  const srcBase = npath.basename(newSrcPath)
+  const scriptDir = getScriptDirFromRelPath(existingIconPath)
+  const iconDir = npath.join(scriptDir, 'icon')
   ensureDir(iconDir)
-  const destFile = npath.join(iconDir, `icon.${ext}`)
-  nfs.copyFileSync(srcPath, destFile)
+  // Remove old icon files
+  if (nfs.existsSync(iconDir)) {
+    for (const f of nfs.readdirSync(iconDir)) {
+      try { nfs.unlinkSync(npath.join(iconDir, f)) } catch { /* ok */ }
+    }
+  }
+  const destFile = npath.join(iconDir, srcBase)
+  nfs.copyFileSync(newSrcPath, destFile)
   return toRelativePath(destFile)
 }
 
-// ─── Delete a script's entire directory ──────────────────────────────────────
+// ─── Delete a script directory (dir derived from stored path) ────────────────
 
-export function deleteScriptDir(app: AppName, scriptName: string): void {
-  const dir = getScriptDir(app, scriptName)
-  rmrf(dir)
+export function deleteScriptDir(existingScriptPath: string): void {
+  const dir = getScriptDirFromRelPath(existingScriptPath)
+  if (dir) rmrf(dir)
 }
 
-// ─── Duplicate a script directory ────────────────────────────────────────────
+// ─── Duplicate a script directory (new dir uses newButtonId) ─────────────────
 
-export function duplicateScriptDir(app: AppName, originalName: string, newName: string): void {
-  const srcDir = getScriptDir(app, originalName)
-  const dstDir = getScriptDir(app, newName)
-  copyDirRecursive(srcDir, dstDir)
+export interface DuplicatedPaths {
+  scriptPath: string
+  iconPath: string
+}
+
+export function duplicateScriptDir(
+  originalScriptPath: string,
+  originalIconPath: string,
+  app: AppName,
+  newButtonId: string,
+): DuplicatedPaths {
+  const srcDir  = getScriptDirFromRelPath(originalScriptPath)
+  const dstDir  = getScriptDir(app, newButtonId)
+  if (srcDir && nfs.existsSync(srcDir)) {
+    copyDirRecursive(srcDir, dstDir)
+  }
+
+  // Re-derive new paths from newButtonId dir
+  const srcRelCode = originalScriptPath.replace(/\\/g, '/').split('/')
+  const srcRelIcon = originalIconPath.replace(/\\/g, '/').split('/')
+  const codeFile   = srcRelCode[srcRelCode.length - 1]
+  const iconFile   = srcRelIcon[srcRelIcon.length - 1]
+
+  const newCodeDir = getCodeDir(app, newButtonId)
+  const newIconDir = getIconDir(app, newButtonId)
+  const newScript  = npath.join(newCodeDir, codeFile)
+  const newIcon    = iconFile ? npath.join(newIconDir, iconFile) : ''
+
+  return {
+    scriptPath: toRelativePath(newScript),
+    iconPath:   newIcon ? toRelativePath(newIcon) : '',
+  }
 }
 
 function copyDirRecursive(src: string, dst: string): void {
@@ -122,12 +168,10 @@ export function safeFolderName(name: string): string {
 
 export function buildAutoIconText(name: string): string {
   if (!name) return '?'
-  // Split by spaces/underscores and take first letter of each word (abbreviation)
   const words = name.trim().split(/[\s_]+/)
   if (words.length >= 2 && words.every((w) => w.length > 0)) {
     const abbr = words.map((w) => w[0].toUpperCase()).join('').slice(0, 6)
     if (abbr.length >= 2) return abbr
   }
-  // Just take the first 6 characters
   return name.trim().slice(0, 6).toUpperCase()
 }

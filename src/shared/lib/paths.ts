@@ -15,19 +15,34 @@ export function getScriptsRoot(): string {
   return npath.join(getFlexioRoot(), 'Scripts')
 }
 
-/** Directory for a specific script: Scripts/{App}/{ScriptName}/ */
-export function getScriptDir(app: AppName, scriptName: string): string {
-  return npath.join(getScriptsRoot(), app, scriptName)
+/** Directory for a specific script slot: Scripts/{App}/{key}/ */
+export function getScriptDir(app: AppName, key: string): string {
+  return npath.join(getScriptsRoot(), app, key)
 }
 
-/** Code directory: Scripts/{App}/{ScriptName}/code/ */
-export function getCodeDir(app: AppName, scriptName: string): string {
-  return npath.join(getScriptDir(app, scriptName), 'code')
+/** Code directory: Scripts/{App}/{key}/code/ */
+export function getCodeDir(app: AppName, key: string): string {
+  return npath.join(getScriptDir(app, key), 'code')
 }
 
-/** Icon directory: Scripts/{App}/{ScriptName}/icon/ */
-export function getIconDir(app: AppName, scriptName: string): string {
-  return npath.join(getScriptDir(app, scriptName), 'icon')
+/** Icon directory: Scripts/{App}/{key}/icon/ */
+export function getIconDir(app: AppName, key: string): string {
+  return npath.join(getScriptDir(app, key), 'icon')
+}
+
+/**
+ * Derive the script root directory from a stored relative path.
+ * Works for both old name-based paths and new UUID-based paths.
+ *
+ * Example: "Scripts/AfterEffects/abc-uuid/code/Sample.jsx"
+ *          → "<root>/Scripts/AfterEffects/abc-uuid"
+ */
+export function getScriptDirFromRelPath(relPath: string): string {
+  // relPath format: "Scripts/<App>/<key>/code/<file>" or "Scripts/<App>/<key>/icon/<file>"
+  const parts = relPath.replace(/\\/g, '/').split('/')
+  // parts[0]="Scripts", parts[1]=app, parts[2]=key
+  if (parts.length < 3) return ''
+  return npath.join(getFlexioRoot(), parts[0], parts[1], parts[2])
 }
 
 /**

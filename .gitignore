@@ -1,0 +1,5 @@
+# Local-only / sensitive files — not published to GitHub
+certs/
+.claude/
+references/
+release/

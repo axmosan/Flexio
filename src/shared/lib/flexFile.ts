@@ -1,70 +1,84 @@
 /**
- * .flex file format:
- *   AES-256 encrypted JSZip archive of the entire Flexio data directory.
+ * Flexio preset format (.json):
+ *   Plain JSON containing blueprints config + script/icon files as Base64.
  *
- * Export: zip Flexio root → encrypt → write .flex
- * Import: decrypt → unzip → write to Flexio root → reload blueprints
+ * Export: read blueprints + all Scripts/* files → encode Base64 → write JSON
+ * Import: decode → restore files → merge blueprints → reload
  */
-import JSZip from 'jszip'
 import { nfs, npath, ensureDir, listFilesRecursive } from './nodeEnv'
-import { getFlexioRoot, toRelativePath } from './paths'
-import { encryptBuffer, decryptToBase64 } from './encryption'
+import { getFlexioRoot, getScriptsRoot, getBlueprintsPath } from './paths'
+import { saveBlueprints, loadBlueprints } from './blueprints'
+import type { BlueprintsData } from '../types'
 import type { ConflictMode } from '../types'
+import { APP_NAMES, PANEL_SLOTS } from '../types'
+
+export interface FlexPreset {
+  flexioPreset: true
+  version: string
+  exportedAt: string
+  blueprints: BlueprintsData
+  /** Relative path (from Flexio root) → Base64-encoded file content */
+  scripts: Record<string, string>
+}
 
 // ─── Export ──────────────────────────────────────────────────────────────────
 
-/**
- * Package the entire Flexio data directory into an encrypted .flex file.
- * @param destPath  Absolute path where the .flex file should be written.
- */
 export async function exportFlex(destPath: string): Promise<void> {
   const root = getFlexioRoot()
-  const zip = new JSZip()
-  const allFiles = listFilesRecursive(root)
+  const blueprintsPath = getBlueprintsPath()
+  const blueprints: BlueprintsData = nfs.existsSync(blueprintsPath)
+    ? (JSON.parse(nfs.readFileSync(blueprintsPath, 'utf8')) as BlueprintsData)
+    : ({} as BlueprintsData)
 
-  for (const absPath of allFiles) {
-    const rel = toRelativePath(absPath).replace(/\\/g, '/')
-    const content = nfs.readFileSync(absPath) // Buffer
-    zip.file(rel, content)
+  const scripts: Record<string, string> = {}
+  const scriptsRoot = getScriptsRoot()
+  if (nfs.existsSync(scriptsRoot)) {
+    for (const absPath of listFilesRecursive(scriptsRoot)) {
+      const rel = npath.relative(root, absPath).replace(/\\/g, '/')
+      const buf = nfs.readFileSync(absPath) as Buffer
+      scripts[rel] = buf.toString('base64')
+    }
   }
 
-  const zipBase64 = await zip.generateAsync({ type: 'base64', compression: 'DEFLATE' })
-  const encrypted = encryptBuffer(zipBase64)
-  nfs.writeFileSync(destPath, encrypted, 'utf8')
+  const preset: FlexPreset = {
+    flexioPreset: true,
+    version: '2.0',
+    exportedAt: new Date().toISOString(),
+    blueprints,
+    scripts,
+  }
+
+  ensureDir(npath.dirname(destPath))
+  nfs.writeFileSync(destPath, JSON.stringify(preset, null, 2), 'utf8')
 }
 
-// ─── Import ──────────────────────────────────────────────────────────────────
+// ─── Preview (conflict detection) ────────────────────────────────────────────
 
 export interface ImportPreview {
-  /** Names of buttons/scripts present in the incoming .flex */
   incomingNames: string[]
-  /** Names already existing locally */
   existingNames: string[]
-  /** Names present in both */
   overlapping: string[]
 }
 
-/**
- * Analyse a .flex file without extracting — returns overlap info for the dialog.
- */
-export async function previewFlex(flexPath: string): Promise<ImportPreview> {
+export async function previewFlex(jsonPath: string): Promise<ImportPreview> {
+  const preset = openPreset(jsonPath)
   const root = getFlexioRoot()
-  const zip = await openFlex(flexPath)
 
-  const incomingNames = Object.keys(zip.files)
-    .filter((p) => p.startsWith('Scripts/') && p.split('/').length === 3 && p.endsWith('/'))
-    .map((p) => p.split('/')[2])
+  // Collect toolset names from incoming blueprints
+  const incomingNames: string[] = []
+  for (const app of APP_NAMES) {
+    const toolsets = preset.blueprints?.apps?.[app]?.toolsets ?? []
+    for (const ts of toolsets) {
+      if (!incomingNames.includes(ts.name)) incomingNames.push(ts.name)
+    }
+  }
 
+  // Collect toolset names already on disk
   const existingNames: string[] = []
-  const scriptsRoot = npath.join(root, 'Scripts')
-  if (nfs.existsSync(scriptsRoot)) {
-    for (const app of nfs.readdirSync(scriptsRoot)) {
-      const appDir = npath.join(scriptsRoot, app)
-      if (nfs.statSync(appDir).isDirectory()) {
-        for (const name of nfs.readdirSync(appDir)) {
-          existingNames.push(name)
-        }
-      }
+  const current = loadBlueprints()
+  for (const app of APP_NAMES) {
+    for (const ts of current.apps[app]?.toolsets ?? []) {
+      if (!existingNames.includes(ts.name)) existingNames.push(ts.name)
     }
   }
 
@@ -72,94 +86,115 @@ export async function previewFlex(flexPath: string): Promise<ImportPreview> {
   return { incomingNames, existingNames, overlapping }
 }
 
-/**
- * Extract a .flex file into the Flexio data directory.
- * @param flexPath  Absolute path of the .flex file.
- * @param mode      Conflict resolution strategy.
- */
-export async function importFlex(flexPath: string, mode: ConflictMode): Promise<void> {
+// ─── Import ──────────────────────────────────────────────────────────────────
+
+export async function importFlex(jsonPath: string, mode: ConflictMode): Promise<void> {
   if (mode === 'cancel') return
-
+  const preset = openPreset(jsonPath)
   const root = getFlexioRoot()
-  const zip = await openFlex(flexPath)
 
-  for (const [relPath, entry] of Object.entries(zip.files)) {
-    if (entry.dir) continue
-
+  // Step 1: restore script/icon files
+  for (const [relPath, b64] of Object.entries(preset.scripts)) {
     const absPath = npath.join(root, relPath)
+    ensureDir(npath.dirname(absPath))
+    const buf = Buffer.from(b64, 'base64')
+    nfs.writeFileSync(absPath, buf)
+  }
 
-    // Determine the script name (third path segment under Scripts/{App}/{Name}/...)
-    const parts = relPath.split('/')
-    const isScript = parts[0] === 'Scripts' && parts.length >= 3
-    const scriptName = isScript ? parts[2] : null
+  // Step 2: merge blueprints
+  if (!preset.blueprints) return
+  const current = loadBlueprints()
+  const incoming = preset.blueprints
 
-    if (mode === 'replace') {
-      // Write everything unconditionally
-      ensureDir(npath.dirname(absPath))
-      const content = await entry.async('nodebuffer')
-      nfs.writeFileSync(absPath, content)
-    } else if (mode === 'updateAdd') {
-      // Always overwrite
-      ensureDir(npath.dirname(absPath))
-      const content = await entry.async('nodebuffer')
-      nfs.writeFileSync(absPath, content)
-    } else if (mode === 'addMissing') {
-      // Only add if the script doesn't exist yet
-      if (scriptName && nfs.existsSync(npath.join(root, 'Scripts'))) {
-        const scriptExists = checkScriptExists(root, scriptName)
-        if (scriptExists) continue
+  const merged = { ...current }
+
+  for (const app of APP_NAMES) {
+    const currentToolsets  = current.apps[app]?.toolsets  ?? []
+    const incomingToolsets = incoming.apps?.[app]?.toolsets ?? []
+
+    let mergedToolsets = [...currentToolsets]
+
+    for (const inTs of incomingToolsets) {
+      const existIdx = mergedToolsets.findIndex((t) => t.name === inTs.name)
+
+      if (existIdx === -1) {
+        // Not present → always add
+        mergedToolsets.push(inTs)
+      } else if (mode === 'replace') {
+        // Replace entire toolset
+        mergedToolsets[existIdx] = inTs
+      } else if (mode === 'updateAdd') {
+        // Keep existing buttons, add/update with incoming
+        const existButtons = mergedToolsets[existIdx].buttons
+        const newButtons = [...existButtons]
+        for (const inBtn of inTs.buttons) {
+          const bIdx = newButtons.findIndex((b) => b.id === inBtn.id || b.name === inBtn.name)
+          if (bIdx === -1) newButtons.push(inBtn)
+          else newButtons[bIdx] = inBtn
+        }
+        mergedToolsets[existIdx] = { ...mergedToolsets[existIdx], buttons: newButtons }
       }
-      ensureDir(npath.dirname(absPath))
-      const content = await entry.async('nodebuffer')
-      nfs.writeFileSync(absPath, content)
+      // 'addMissing': overlapping toolset skipped (only new toolsets added above)
+    }
+
+    merged.apps = { ...merged.apps, [app]: { toolsets: mergedToolsets } }
+  }
+
+  // Merge panel settings (incoming values take priority for new fields)
+  if (incoming.panelSettings) {
+    for (const slot of PANEL_SLOTS) {
+      if (incoming.panelSettings[slot]) {
+        merged.panelSettings = {
+          ...merged.panelSettings,
+          [slot]: { ...merged.panelSettings[slot], ...incoming.panelSettings[slot] },
+        }
+      }
     }
   }
+
+  saveBlueprints(merged)
 }
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 
-async function openFlex(flexPath: string): Promise<JSZip> {
-  const encrypted = nfs.readFileSync(flexPath, 'utf8')
-  const zipBase64 = decryptToBase64(encrypted)
-  const zip = new JSZip()
-  await zip.loadAsync(zipBase64, { base64: true })
-  return zip
-}
-
-function checkScriptExists(root: string, scriptName: string): boolean {
-  const scriptsRoot = npath.join(root, 'Scripts')
-  if (!nfs.existsSync(scriptsRoot)) return false
-  for (const app of nfs.readdirSync(scriptsRoot)) {
-    const candidate = npath.join(scriptsRoot, app, scriptName)
-    if (nfs.existsSync(candidate)) return true
+function openPreset(jsonPath: string): FlexPreset {
+  const raw = nfs.readFileSync(jsonPath, 'utf8')
+  const parsed = JSON.parse(raw) as FlexPreset
+  if (!parsed.flexioPreset) {
+    throw new Error('Not a valid Flexio preset file.')
   }
-  return false
+  return parsed
 }
 
-// ─── Open save/open dialog via CEP file dialog ───────────────────────────────
+// ─── Default preset path ──────────────────────────────────────────────────────
 
-/**
- * Show the OS "Save File" dialog and return the chosen path.
- * In CEP, we call a native method via window.cep.
- * Falls back to undefined if not in CEP.
- */
+export function getDefaultPresetDir(): string {
+  return npath.join(getFlexioRoot(), 'UserPresets')
+}
+
+export function getDefaultPresetPath(): string {
+  return npath.join(getDefaultPresetDir(), 'Flexio_Presets.json')
+}
+
+// ─── OS file dialogs ──────────────────────────────────────────────────────────
+
 export function showSaveDialog(defaultName: string): string | undefined {
-  if (typeof window === 'undefined') return undefined
-  const cep = (window as unknown as { cep?: { fs?: unknown } }).cep
-  if (!cep) return undefined
-
-  // Use Node.js child_process / PowerShell for a save dialog on Windows
   try {
+    const defaultDir = getDefaultPresetDir()
+    ensureDir(defaultDir)
     const cp = (new Function('m', 'return require(m)'))('child_process') as typeof import('child_process')
     const result = cp.execSync(
       `powershell -Command "Add-Type -AssemblyName System.Windows.Forms; ` +
       `$f = New-Object System.Windows.Forms.SaveFileDialog; ` +
-      `$f.Filter = 'Flex files (*.flex)|*.flex'; ` +
+      `$f.Filter = 'Flexio Preset (*.json)|*.json'; ` +
+      `$f.DefaultExt = 'json'; ` +
       `$f.FileName = '${defaultName}'; ` +
+      `$f.InitialDirectory = [System.IO.Path]::GetFullPath('${defaultDir.replace(/\\/g, '\\\\')}'); ` +
       `$f.ShowDialog() | Out-Null; $f.FileName"`,
       { encoding: 'utf8' },
     ).trim()
-    return result || undefined
+    if (!result) return undefined
+    return result.endsWith('.json') ? result : result + '.json'
   } catch {
     return undefined
   }
@@ -167,11 +202,13 @@ export function showSaveDialog(defaultName: string): string | undefined {
 
 export function showOpenDialog(): string | undefined {
   try {
+    const defaultDir = getDefaultPresetDir()
     const cp = (new Function('m', 'return require(m)'))('child_process') as typeof import('child_process')
     const result = cp.execSync(
       `powershell -Command "Add-Type -AssemblyName System.Windows.Forms; ` +
       `$f = New-Object System.Windows.Forms.OpenFileDialog; ` +
-      `$f.Filter = 'Flex files (*.flex)|*.flex'; ` +
+      `$f.Filter = 'Flexio Preset (*.json)|*.json'; ` +
+      `$f.InitialDirectory = [System.IO.Path]::GetFullPath('${defaultDir.replace(/\\/g, '\\\\')}'); ` +
       `$f.ShowDialog() | Out-Null; $f.FileName"`,
       { encoding: 'utf8' },
     ).trim()
@@ -181,7 +218,6 @@ export function showOpenDialog(): string | undefined {
   }
 }
 
-/** Open Windows Explorer at a given folder path */
 export function openInExplorer(folderPath: string): void {
   try {
     const cp = (new Function('m', 'return require(m)'))('child_process') as typeof import('child_process')

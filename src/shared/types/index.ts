@@ -29,9 +29,9 @@ export interface ButtonDef {
   id: string
   name: string
   description: string
-  /** Relative to Flexio data root, e.g. "Scripts/AfterEffects/SolidCreator/code/SolidCreator.jsx" */
+  /** Relative to Flexio data root, e.g. "Scripts/AfterEffects/<buttonId>/code/Sample.jsx" */
   scriptPath: string
-  /** Relative to Flexio data root, e.g. "Scripts/AfterEffects/SolidCreator/icon/icon.png" */
+  /** Relative to Flexio data root, e.g. "Scripts/AfterEffects/<buttonId>/icon/icon.png" */
   iconPath: string
   iconType: IconType
   /** Up to 6 chars displayed when iconType === 'text' */
@@ -55,20 +55,34 @@ export interface AppData {
 /** Maps each panel slot to a toolset ID (or '' if unassigned) */
 export type AllocationMap = Record<PanelSlot, string>
 
-// ─── Global UI settings ──────────────────────────────────────────────────────
-export interface GlobalSettings {
-  /** Button size in px (32–128) */
-  buttonScale: number
-  /** Gap between buttons in px (0–32) */
-  buttonSpacing: number
+// ─── UI display mode ─────────────────────────────────────────────────────────
+/** 'icon' = grid of square buttons, 'icon+name' = list with icon+label, 'name' = text-only list */
+export type UIMode = 'icon' | 'icon+name' | 'name'
+
+// ─── Per-panel settings (per-slot, not per-app) ──────────────────────────────
+export interface PanelSettings {
+  /** Scale in px: button size for icon mode, row/font scale for list modes (32–128) */
+  scale: number
+  /** Gap between buttons/rows in px (0–32) */
+  spacing: number
+  /** Allow drag-to-reorder */
+  flipToReorder: boolean
+  /** Display mode */
+  uiMode: UIMode
+  /** Column count: 0 = AUTO, 1–9 = fixed. Only applies when uiMode === 'icon' */
+  columns: number
 }
+
+export type PanelSettingsMap = Record<PanelSlot, PanelSettings>
 
 // ─── Root data structure (flexio-blueprints.json) ────────────────────────────
 export interface BlueprintsData {
   version: string
   lastModified: string
+  /** Per-app, per-slot toolset assignment */
   allocation: Record<AppName, AllocationMap>
-  settings: GlobalSettings
+  /** Per-slot visual settings (independent of which app is running) */
+  panelSettings: PanelSettingsMap
   apps: Record<AppName, AppData>
 }
 

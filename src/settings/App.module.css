@@ -18,11 +18,24 @@
 .sidebar {
   width: 90px;
   flex-shrink: 0;
-  padding: 20px 0;
+  padding: 20px 0 12px;
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+}
+
+.navItems {
+  display: flex;
+  flex-direction: column;
   gap: 2px;
+}
+
+.version {
+  padding: 0 16px;
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0.6;
 }
 
 .navItem {

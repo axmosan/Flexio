@@ -3,7 +3,7 @@
   "version": "1.1.0",
   "description": "Unified script launcher for Adobe applications",
   "author": "Nakano Sho",
-  "license": "GPL-3.0",
+  "license": "Apache-2.0",
   "private": true,
   "scripts": {
     "dev": "vite --config vite.config.ts",

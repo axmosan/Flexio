@@ -28,6 +28,10 @@
   transition: filter var(--transition);
 }
 
+.iconArea.crisp {
+  border-radius: 0;
+}
+
 .iconImg {
   width: 100%;
   height: 100%;

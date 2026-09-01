@@ -21,6 +21,7 @@ export function defaultPanelSettings(): PanelSettings {
     spacing: 8,
     flipToReorder: false,
     uiMode: 'icon',
+    iconShape: 'rounded',
     columns: 0,
   }
 }
@@ -83,6 +84,7 @@ export function loadBlueprints(): BlueprintsData {
           spacing: oldSpacing,
           flipToReorder: oldFlip,
           uiMode: 'icon',
+          iconShape: 'rounded',
           columns: 0,
         }
       }
@@ -100,6 +102,7 @@ export function loadBlueprints(): BlueprintsData {
           if (s.spacing      === undefined) s.spacing      = 8
           if (s.flipToReorder === undefined) s.flipToReorder = false
           if (s.uiMode       === undefined) s.uiMode       = 'icon'
+          if (s.iconShape    === undefined) s.iconShape    = 'rounded'
           if (s.columns      === undefined) s.columns      = 0
         }
       }

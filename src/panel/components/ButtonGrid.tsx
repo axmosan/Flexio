@@ -8,7 +8,7 @@ import React, {
 import { useBlueprints } from '@/shared/context/BlueprintsContext'
 import { ScriptButton } from './ScriptButton'
 import { AddButtonCell } from './AddButtonCell'
-import type { AppName, ButtonDef, UIMode } from '@/shared/types'
+import type { AppName, ButtonDef, IconShape, UIMode } from '@/shared/types'
 import styles from './ButtonGrid.module.css'
 
 const DRAG_THRESHOLD = 6
@@ -22,11 +22,12 @@ interface Props {
   spacing: number
   flipToReorder: boolean
   uiMode: UIMode
+  iconShape: IconShape
   columns: number
 }
 
 export function ButtonGrid({
-  buttons, app, toolsetId, scale, spacing, flipToReorder, uiMode, columns,
+  buttons, app, toolsetId, scale, spacing, flipToReorder, uiMode, iconShape, columns,
 }: Props) {
   const { reorderButtons } = useBlueprints()
 
@@ -215,10 +216,10 @@ export function ButtonGrid({
             onMouseEnter={() => handleMouseEnter(btn.id)}
             onClickCapture={handleClickCapture}
           >
-            <ScriptButton button={btn} app={app} scale={scale} uiMode={uiMode} />
+            <ScriptButton button={btn} app={app} scale={scale} uiMode={uiMode} iconShape={iconShape} />
           </div>
         ))}
-        <AddButtonCell size={scale} app={app} />
+        <AddButtonCell size={scale} app={app} iconShape={iconShape} />
       </div>
     )
   }
@@ -239,7 +240,7 @@ export function ButtonGrid({
           onMouseEnter={() => handleMouseEnter(btn.id)}
           onClickCapture={handleClickCapture}
         >
-          <ScriptButton button={btn} app={app} scale={scale} uiMode={uiMode} />
+          <ScriptButton button={btn} app={app} scale={scale} uiMode={uiMode} iconShape={iconShape} />
         </div>
       ))}
       <AddButtonCell size={scale} app={app} listMode />

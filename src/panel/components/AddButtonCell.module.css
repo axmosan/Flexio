@@ -21,6 +21,10 @@
   box-sizing: border-box;
 }
 
+.iconArea.crisp {
+  border-radius: 0;
+}
+
 .btn:hover .iconArea {
   border-color: var(--accent);
   background: rgba(77, 158, 255, 0.06);

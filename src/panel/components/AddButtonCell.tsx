@@ -1,16 +1,17 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { getPanelSlot, openSettingsWindow } from '@/shared/lib/cepInterface'
-import type { AppName } from '@/shared/types'
+import type { AppName, IconShape } from '@/shared/types'
 import styles from './AddButtonCell.module.css'
 
 interface Props {
   size: number
   app: AppName
+  iconShape?: IconShape
   listMode?: boolean
 }
 
-export function AddButtonCell({ size, app, listMode }: Props) {
+export function AddButtonCell({ size, app, iconShape, listMode }: Props) {
   const slot = getPanelSlot()
 
   if (listMode) {
@@ -41,7 +42,7 @@ export function AddButtonCell({ size, app, listMode }: Props) {
       transition={{ duration: 0.12 }}
       title="Add script button"
     >
-      <div className={styles.iconArea}>
+      <div className={`${styles.iconArea} ${iconShape === 'crisp' ? styles.crisp : ''}`}>
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
           <path d="M10 4v12M4 10h12" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" />
         </svg>

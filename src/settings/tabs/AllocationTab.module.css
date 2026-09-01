@@ -76,10 +76,20 @@
 }
 
 /* ── Mode selector buttons ──────────────────────────────────────────────────── */
+.modeGroup {
+  margin-bottom: 14px;
+}
+
 .modeRow {
   display: flex;
   gap: 6px;
-  margin-bottom: 14px;
+}
+
+/* Icon shape row — same buttons, set slightly apart from the mode row */
+.shapeRow {
+  display: flex;
+  gap: 6px;
+  padding-top: 8px;
 }
 
 .modeBtn {

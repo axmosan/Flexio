@@ -1,12 +1,15 @@
 import React, { useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { useBlueprints } from '@/shared/context/BlueprintsContext'
 import { APP_NAMES, APP_DISPLAY_NAMES, PANEL_SLOTS } from '@/shared/types'
-import type { AppName, PanelSlot, UIMode } from '@/shared/types'
+import type { AppName, IconShape, PanelSlot, UIMode } from '@/shared/types'
 import { getHostApp, isCEP } from '@/shared/lib/cepInterface'
 import styles from './AllocationTab.module.css'
-import iconOnlySvg    from '@/shared/assets/svg/mode_icon.svg'
-import iconNameSvg    from '@/shared/assets/svg/mode_icon_name.svg'
-import nameOnlySvg    from '@/shared/assets/svg/mode_name.svg'
+import iconOnlySvg     from '@/shared/assets/svg/mode_icon.svg'
+import iconNameSvg     from '@/shared/assets/svg/mode_icon_name.svg'
+import nameOnlySvg     from '@/shared/assets/svg/mode_name.svg'
+import shapeCrispSvg   from '@/shared/assets/svg/shape_crisp.svg'
+import shapeRoundedSvg from '@/shared/assets/svg/shape_rounded.svg'
 
 const VALID_APPS: AppName[] = ['AfterEffects', 'PremierePro', 'Illustrator', 'Photoshop']
 
@@ -43,6 +46,11 @@ const UI_MODES: { mode: UIMode; icon: string; label: string }[] = [
   { mode: 'icon',      icon: iconOnlySvg,  label: 'Icon' },
   { mode: 'icon+name', icon: iconNameSvg,  label: 'Icon + Name' },
   { mode: 'name',      icon: nameOnlySvg,  label: 'Name' },
+]
+
+const ICON_SHAPES: { shape: IconShape; icon: string; label: string }[] = [
+  { shape: 'crisp',   icon: shapeCrispSvg,   label: 'Crisp' },
+  { shape: 'rounded', icon: shapeRoundedSvg, label: 'Rounded' },
 ]
 
 interface Props {
@@ -94,18 +102,46 @@ export function AllocationTab({ initialApp }: Props) {
 
             {isOpen && (
               <div className={styles.panelBody}>
-                {/* UI mode selector */}
-                <div className={styles.modeRow}>
-                  {UI_MODES.map(({ mode, icon, label }) => (
-                    <button
-                      key={mode}
-                      className={`${styles.modeBtn} ${ps.uiMode === mode ? styles.modeBtnActive : ''}`}
-                      onClick={() => updatePanelSettings(slot, { uiMode: mode })}
-                    >
-                      <img src={icon} alt={label} width={16} height={16} className={styles.modeIcon} />
-                      <span>{label}</span>
-                    </button>
-                  ))}
+                {/* UI mode selector + icon shape selector */}
+                <div className={styles.modeGroup}>
+                  <div className={styles.modeRow}>
+                    {UI_MODES.map(({ mode, icon, label }) => (
+                      <button
+                        key={mode}
+                        className={`${styles.modeBtn} ${ps.uiMode === mode ? styles.modeBtnActive : ''}`}
+                        onClick={() => updatePanelSettings(slot, { uiMode: mode })}
+                      >
+                        <img src={icon} alt={label} width={16} height={16} className={styles.modeIcon} />
+                        <span>{label}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Icon shape — only shown while icons are visible */}
+                  <AnimatePresence initial={false}>
+                    {ps.uiMode !== 'name' && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.18 }}
+                        style={{ overflow: 'hidden' }}
+                      >
+                        <div className={styles.shapeRow}>
+                          {ICON_SHAPES.map(({ shape, icon, label }) => (
+                            <button
+                              key={shape}
+                              className={`${styles.modeBtn} ${ps.iconShape === shape ? styles.modeBtnActive : ''}`}
+                              onClick={() => updatePanelSettings(slot, { iconShape: shape })}
+                            >
+                              <img src={icon} alt={label} width={16} height={16} className={styles.modeIcon} />
+                              <span>{label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 {/* Toolkit + Columns */}

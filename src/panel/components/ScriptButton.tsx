@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { getIconRows, nameToHsl, iconPathToUrl } from '@/shared/lib/iconGenerator'
 import { executeScript } from '@/shared/lib/cepInterface'
 import { toAbsolutePath } from '@/shared/lib/paths'
-import type { AppName, ButtonDef, UIMode } from '@/shared/types'
+import type { AppName, ButtonDef, IconShape, UIMode } from '@/shared/types'
 import styles from './ScriptButton.module.css'
 
 interface Props {
@@ -11,9 +11,10 @@ interface Props {
   app: AppName
   scale: number
   uiMode: UIMode
+  iconShape: IconShape
 }
 
-export function ScriptButton({ button, scale, uiMode }: Props) {
+export function ScriptButton({ button, scale, uiMode, iconShape }: Props) {
   const [running, setRunning] = useState(false)
   const [error,   setError]   = useState(false)
 
@@ -42,6 +43,7 @@ export function ScriptButton({ button, scale, uiMode }: Props) {
   const iconSize     = uiMode === 'icon+name' ? Math.max(24, Math.round(scale * 0.6)) : scale
   const iconTextSize = scale < 48 ? 9 : scale < 64 ? 11 : 13
   const listFontSize = Math.max(10, Math.round(scale * 0.19))
+  const crisp        = iconShape === 'crisp'
 
   // ── Icon-only grid mode ─────────────────────────────────────────────────
   if (uiMode === 'icon') {
@@ -55,7 +57,7 @@ export function ScriptButton({ button, scale, uiMode }: Props) {
         transition={{ duration: 0.12, ease: 'easeOut' }}
       >
         <div
-          className={styles.iconArea}
+          className={`${styles.iconArea} ${crisp ? styles.crisp : ''}`}
           style={{ background: button.iconType === 'text' ? bgColor : 'transparent' }}
         >
           {button.iconType === 'image' && iconUrl ? (
@@ -89,7 +91,7 @@ export function ScriptButton({ button, scale, uiMode }: Props) {
             height:           iconSize,
             flexShrink:       0,
             background:       button.iconType === 'text' ? bgColor : 'transparent',
-            borderRadius:     'var(--radius)',
+            borderRadius:     crisp ? 0 : 'var(--radius)',
             overflow:         'hidden',
             display:          'flex',
             alignItems:       'center',

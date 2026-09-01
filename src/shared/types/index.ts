@@ -59,6 +59,10 @@ export type AllocationMap = Record<PanelSlot, string>
 /** 'icon' = grid of square buttons, 'icon+name' = list with icon+label, 'name' = text-only list */
 export type UIMode = 'icon' | 'icon+name' | 'name'
 
+// ─── Icon corner shape ───────────────────────────────────────────────────────
+/** 'rounded' = icons cropped to a rounded square, 'crisp' = sharp square corners */
+export type IconShape = 'rounded' | 'crisp'
+
 // ─── Per-panel settings (per-slot, not per-app) ──────────────────────────────
 export interface PanelSettings {
   /** Scale in px: button size for icon mode, row/font scale for list modes (32–128) */
@@ -69,6 +73,8 @@ export interface PanelSettings {
   flipToReorder: boolean
   /** Display mode */
   uiMode: UIMode
+  /** Icon corner shape. Only applies when uiMode is 'icon' or 'icon+name' */
+  iconShape: IconShape
   /** Column count: 0 = AUTO, 1–9 = fixed. Only applies when uiMode === 'icon' */
   columns: number
 }

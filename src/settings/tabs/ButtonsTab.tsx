@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, LayoutGroup, motion } from 'framer-motion'
 import { useBlueprints } from '@/shared/context/BlueprintsContext'
 import { APP_NAMES, APP_DISPLAY_NAMES } from '@/shared/types'
 import type { AppName, ToolsetDef } from '@/shared/types'
 import { ToolsetSection } from '../components/ToolsetSection'
+import { ButtonDragProvider } from '../components/ButtonDragContext'
 import styles from './ButtonsTab.module.css'
 
 // App icon imports
@@ -97,9 +98,15 @@ export function ButtonsTab({ initialApp }: Props) {
                   {toolsets.length === 0 ? (
                     <div className={styles.noToolsets}>No toolsets yet.</div>
                   ) : (
-                    toolsets.map((ts) => (
-                      <ToolsetSection key={ts.id} app={app} toolset={ts} />
-                    ))
+                    /* One drag context per app: rows travel between this app's
+                       toolsets, never into another app's. */
+                    <ButtonDragProvider app={app}>
+                      <LayoutGroup id={app}>
+                        {toolsets.map((ts) => (
+                          <ToolsetSection key={ts.id} app={app} toolset={ts} />
+                        ))}
+                      </LayoutGroup>
+                    </ButtonDragProvider>
                   )}
                 </motion.div>
               )}

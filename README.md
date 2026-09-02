@@ -9,8 +9,8 @@ After Effects has KBar; the rest of the Adobe suite has nothing comparable, so a
 ## Features
 
 - **Host-aware** — the panel detects its host and shows that application's buttons. Each of the four applications keeps its own set, so the same panel is a different tool in each.
-- **Buttons** — point one at a `.jsx` script and give it an icon: an image, or up to six characters of text with an icon generated from them. Reorder by dragging.
-- **Toolsets** — group buttons into sets and switch between them, so a project's scripts stay together instead of filling one flat grid.
+- **Buttons** — point one at a `.jsx` script and give it an icon: an image, or up to six characters of text with an icon generated from them. Reorder by dragging, and hide one from the panel without deleting it.
+- **Toolsets** — group buttons into sets and switch between them, so a project's scripts stay together instead of filling one flat grid. Buttons drag from one toolset to another.
 - **Four panel slots** per host (`Flexio 1`–`Flexio 4`), each with its own toolset allocation, column count (fixed 1–6 or auto) and display mode — icon, name, or both.
 - **Export / import** — a preset file carries the button layout *and* the script and icon files themselves, Base64-encoded into a single JSON, so a setup moves to another machine in one file. Name clashes prompt for merge or overwrite.
 - **Search** filters buttons by name as you type.

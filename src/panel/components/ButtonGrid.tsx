@@ -31,8 +31,9 @@ export function ButtonGrid({
 }: Props) {
   const { reorderButtons } = useBlueprints()
 
+  // Buttons flagged hidden stay in the toolset but never reach the panel
   const baseSorted = useMemo(
-    () => [...buttons].sort((a, b) => a.order - b.order),
+    () => buttons.filter((b) => !b.hidden).sort((a, b) => a.order - b.order),
     [buttons],
   )
 
@@ -194,6 +195,10 @@ export function ButtonGrid({
     .map((id) => idToButton[id])
     .filter(Boolean) as ButtonDef[]
 
+  // The add-button cell is only an empty-state affordance: once the toolset has
+  // at least one button — hidden ones included — the gear icon is the way to add more.
+  const showAddCell = buttons.length === 0
+
   // ── Grid layout (icon mode) ───────────────────────────────────────────────
   if (uiMode === 'icon') {
     const gridStyle: React.CSSProperties = columns > 0
@@ -219,7 +224,7 @@ export function ButtonGrid({
             <ScriptButton button={btn} app={app} scale={scale} uiMode={uiMode} iconShape={iconShape} />
           </div>
         ))}
-        <AddButtonCell size={scale} app={app} iconShape={iconShape} />
+        {showAddCell && <AddButtonCell size={scale} app={app} iconShape={iconShape} />}
       </div>
     )
   }
@@ -243,7 +248,7 @@ export function ButtonGrid({
           <ScriptButton button={btn} app={app} scale={scale} uiMode={uiMode} iconShape={iconShape} />
         </div>
       ))}
-      <AddButtonCell size={scale} app={app} listMode />
+      {showAddCell && <AddButtonCell size={scale} app={app} listMode />}
     </div>
   )
 }

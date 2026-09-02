@@ -2,15 +2,15 @@
 <ExtensionManifest xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   ExtensionBundleId="com.flexio"
   ExtensionBundleName="Flexio"
-  ExtensionBundleVersion="1.2.0"
+  ExtensionBundleVersion="1.2.1"
   Version="12.0">
 
   <ExtensionList>
-    <Extension Id="com.flexio.panel1" Version="1.2.0" />
-    <Extension Id="com.flexio.panel2" Version="1.2.0" />
-    <Extension Id="com.flexio.panel3" Version="1.2.0" />
-    <Extension Id="com.flexio.panel4" Version="1.2.0" />
-    <Extension Id="com.flexio.settings" Version="1.2.0" />
+    <Extension Id="com.flexio.panel1" Version="1.2.1" />
+    <Extension Id="com.flexio.panel2" Version="1.2.1" />
+    <Extension Id="com.flexio.panel3" Version="1.2.1" />
+    <Extension Id="com.flexio.panel4" Version="1.2.1" />
+    <Extension Id="com.flexio.settings" Version="1.2.1" />
   </ExtensionList>
 
   <ExecutionEnvironment>

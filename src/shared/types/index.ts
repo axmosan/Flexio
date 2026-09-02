@@ -37,6 +37,8 @@ export interface ButtonDef {
   /** Up to 6 chars displayed when iconType === 'text' */
   autoIconText: string
   order: number
+  /** Kept in the toolset but not rendered in the panel. Absent means visible. */
+  hidden?: boolean
 }
 
 // ─── Toolset definition ──────────────────────────────────────────────────────

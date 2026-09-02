@@ -67,7 +67,11 @@ interface BlueprintsContextValue {
   ) => void
   deleteButton: (app: AppName, toolsetId: string, buttonId: string) => void
   duplicateButton: (app: AppName, toolsetId: string, buttonId: string) => void
+  setButtonHidden: (app: AppName, toolsetId: string, buttonId: string, hidden: boolean) => void
   reorderButtons: (app: AppName, toolsetId: string, orderedIds: string[]) => void
+  /** Rewrite the button layout of one app: toolsetId → ordered button IDs.
+   *  Buttons listed under a different toolset than they currently live in are moved. */
+  applyButtonLayout: (app: AppName, layout: Record<string, string[]>) => void
 
   // Settings operations
   updatePanelSettings: (slot: PanelSlot, updates: Partial<PanelSettings>) => void
@@ -336,20 +340,69 @@ export function BlueprintsProvider({ children }: { children: React.ReactNode }) 
     [update],
   )
 
+  const setButtonHidden = useCallback(
+    (app: AppName, toolsetId: string, buttonId: string, hidden: boolean) => {
+      update((bp) => {
+        const toolsets = bp.apps[app].toolsets.map((ts) => {
+          if (ts.id !== toolsetId) return ts
+          return {
+            ...ts,
+            buttons: ts.buttons.map((b) => (b.id === buttonId ? { ...b, hidden } : b)),
+          }
+        })
+        return { ...bp, apps: { ...bp.apps, [app]: { toolsets } } }
+      })
+    },
+    [update],
+  )
+
+  /**
+   * Reorder a toolset. `orderedIds` may cover only part of the toolset — the
+   * panel omits hidden buttons — so unlisted buttons keep their current slot and
+   * the listed ones are dealt into the remaining slots in the given order.
+   */
   const reorderButtons = useCallback(
     (app: AppName, toolsetId: string, orderedIds: string[]) => {
       update((bp) => {
         const toolsets = bp.apps[app].toolsets.map((ts) => {
           if (ts.id !== toolsetId) return ts
-          const buttons = orderedIds.map((id, idx) => {
-            const btn = ts.buttons.find((b) => b.id === id)
-            return btn ? { ...btn, order: idx } : null
-          }).filter(Boolean) as ButtonDef[]
-          const remaining = ts.buttons.filter((b) => !orderedIds.includes(b.id))
-          return {
-            ...ts,
-            buttons: [...buttons, ...remaining.map((b, i) => ({ ...b, order: buttons.length + i }))],
-          }
+          const current = [...ts.buttons].sort((a, b) => a.order - b.order)
+          const queue = orderedIds
+            .map((id) => current.find((b) => b.id === id))
+            .filter(Boolean) as ButtonDef[]
+          const listed = new Set(queue.map((b) => b.id))
+          let qi = 0
+          const buttons = current.map((b) => (listed.has(b.id) ? queue[qi++] : b))
+          return { ...ts, buttons: buttons.map((b, i) => ({ ...b, order: i })) }
+        })
+        return { ...bp, apps: { ...bp.apps, [app]: { toolsets } } }
+      })
+    },
+    [update],
+  )
+
+  /**
+   * Commit a whole-app button layout (settings drag). Buttons may travel between
+   * toolsets of the same app; the script files live under Scripts/<app>/<buttonId>,
+   * so no file has to move. Buttons the layout does not mention anywhere are kept
+   * at the end of the toolset they are already in.
+   */
+  const applyButtonLayout = useCallback(
+    (app: AppName, layout: Record<string, string[]>) => {
+      update((bp) => {
+        const byId = new Map<string, ButtonDef>()
+        for (const ts of bp.apps[app].toolsets) {
+          for (const b of ts.buttons) byId.set(b.id, b)
+        }
+        const mentioned = new Set(Object.values(layout).flat())
+
+        const toolsets = bp.apps[app].toolsets.map((ts) => {
+          const ids = layout[ts.id]
+          if (!ids) return ts
+          const listed = ids.map((id) => byId.get(id)).filter(Boolean) as ButtonDef[]
+          const untouched = ts.buttons.filter((b) => !mentioned.has(b.id))
+          const buttons = [...listed, ...untouched].map((b, i) => ({ ...b, order: i }))
+          return { ...ts, buttons }
         })
         return { ...bp, apps: { ...bp.apps, [app]: { toolsets } } }
       })
@@ -397,7 +450,9 @@ export function BlueprintsProvider({ children }: { children: React.ReactNode }) 
         updateButton,
         deleteButton,
         duplicateButton,
+        setButtonHidden,
         reorderButtons,
+        applyButtonLayout,
         updatePanelSettings,
         updateAllocation,
         update,

@@ -9,22 +9,27 @@ import editIcon from '@/shared/assets/svg/edit.svg'
 import duplicateIcon from '@/shared/assets/svg/duplicate.svg'
 import trashIcon from '@/shared/assets/svg/trash.svg'
 import dragHandleIcon from '@/shared/assets/svg/drag_handle.svg'
+import eyeIcon from '@/shared/assets/svg/eye.svg'
+import eyeOffIcon from '@/shared/assets/svg/eye_off.svg'
 
 interface Props {
   app: AppName
   toolsetId: string
   button: ButtonDef
+  /** True while this row is the one being dragged */
+  dragging?: boolean
   dragHandleProps?: React.HTMLAttributes<HTMLDivElement>
 }
 
-export function ButtonRow({ app, toolsetId, button, dragHandleProps }: Props) {
-  const { deleteButton, duplicateButton } = useBlueprints()
+export function ButtonRow({ app, toolsetId, button, dragging, dragHandleProps }: Props) {
+  const { deleteButton, duplicateButton, setButtonHidden } = useBlueprints()
   const [expanded, setExpanded] = useState(false)
   const [editing, setEditing] = useState(false)
 
   const [row1, row2] = getIconRows(button.autoIconText)
   const iconUrl = button.iconType === 'image' ? iconPathToUrl(button.iconPath) : ''
   const bgColor = nameToHsl(button.name)
+  const isHidden = button.hidden === true
 
   function handleDelete() {
     if (window.confirm(`Delete "${button.name}"?`)) {
@@ -37,9 +42,12 @@ export function ButtonRow({ app, toolsetId, button, dragHandleProps }: Props) {
   }
 
   return (
-    <div className={styles.root}>
+    <div className={`${styles.root} ${isHidden ? styles.hiddenRow : ''}`}>
       {/* Button summary row */}
-      <div className={styles.row} onClick={() => { setExpanded((v) => !v); setEditing(false) }}>
+      <div
+        className={`${styles.row} ${dragging ? styles.dragging : ''}`}
+        onClick={() => { setExpanded((v) => !v); setEditing(false) }}
+      >
         {/* Drag handle */}
         <div
           className={styles.dragHandle}
@@ -59,6 +67,17 @@ export function ButtonRow({ app, toolsetId, button, dragHandleProps }: Props) {
           )}
         </div>
         <span className={styles.name}>{button.name}</span>
+        {/* Panel visibility — the button stays in the toolset either way */}
+        <button
+          className={`${styles.eyeBtn} ${isHidden ? styles.eyeOff : ''}`}
+          onClick={(e) => {
+            e.stopPropagation()
+            setButtonHidden(app, toolsetId, button.id, !isHidden)
+          }}
+          title={isHidden ? 'Hidden from the panel — click to show' : 'Shown in the panel — click to hide'}
+        >
+          <img src={isHidden ? eyeOffIcon : eyeIcon} alt="" width={13} height={13} />
+        </button>
         <motion.span
           className={styles.chevron}
           animate={{ rotate: expanded ? 90 : 0 }}

@@ -139,3 +139,42 @@
 .actionBtn.danger img {
   filter: invert(0) sepia(1) saturate(4) hue-rotate(320deg) brightness(1.1);
 }
+
+/* ── Panel visibility toggle ──────────────────────────────────────────────── */
+.eyeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  opacity: 0.4;
+  transition: opacity var(--transition), background var(--transition);
+}
+
+.eyeBtn:hover {
+  opacity: 1;
+  background: var(--surface-raised);
+}
+
+.eyeBtn.eyeOff {
+  opacity: 0.85;
+}
+
+.eyeBtn img {
+  filter: invert(1);
+  display: block;
+}
+
+/* ── Hidden from the panel ────────────────────────────────────────────────── */
+.hiddenRow .miniIcon,
+.hiddenRow .name {
+  opacity: 0.4;
+}
+
+/* ── Row being dragged ────────────────────────────────────────────────────── */
+.row.dragging {
+  background: var(--surface-hover);
+  opacity: 0.6;
+}

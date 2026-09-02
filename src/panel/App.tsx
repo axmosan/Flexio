@@ -17,7 +17,7 @@ export default function App() {
     [blueprints, app, toolsetId],
   )
 
-  const { scale, spacing, flipToReorder, uiMode, iconShape, columns } = blueprints.panelSettings[slot]
+  const { scale, spacing, flipToReorder, uiMode, iconShape, columns } = blueprints.panelSettings[app][slot]
 
   if (!isLoaded) return null
 

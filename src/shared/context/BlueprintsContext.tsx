@@ -74,7 +74,7 @@ interface BlueprintsContextValue {
   applyButtonLayout: (app: AppName, layout: Record<string, string[]>) => void
 
   // Settings operations
-  updatePanelSettings: (slot: PanelSlot, updates: Partial<PanelSettings>) => void
+  updatePanelSettings: (app: AppName, slot: PanelSlot, updates: Partial<PanelSettings>) => void
   updateAllocation: (app: AppName, updates: Partial<AllocationMap>) => void
 
   // Raw updater (for advanced use)
@@ -413,12 +413,15 @@ export function BlueprintsProvider({ children }: { children: React.ReactNode }) 
   // ── Settings operations ─────────────────────────────────────────────────────
 
   const updatePanelSettings = useCallback(
-    (slot: PanelSlot, updates: Partial<PanelSettings>) => {
+    (app: AppName, slot: PanelSlot, updates: Partial<PanelSettings>) => {
       update((bp) => ({
         ...bp,
         panelSettings: {
           ...bp.panelSettings,
-          [slot]: { ...bp.panelSettings[slot], ...updates },
+          [app]: {
+            ...bp.panelSettings[app],
+            [slot]: { ...bp.panelSettings[app][slot], ...updates },
+          },
         },
       }))
     },

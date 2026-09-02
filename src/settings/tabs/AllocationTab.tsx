@@ -85,7 +85,7 @@ export function AllocationTab({ initialApp }: Props) {
 
       {/* Per-panel collapsible sections */}
       {PANEL_SLOTS.map((slot) => {
-        const ps       = blueprints.panelSettings[slot]
+        const ps       = blueprints.panelSettings[activeApp][slot]
         const toolsets = blueprints.apps[activeApp].toolsets
         const isOpen   = expanded[slot]
 
@@ -109,7 +109,7 @@ export function AllocationTab({ initialApp }: Props) {
                       <button
                         key={mode}
                         className={`${styles.modeBtn} ${ps.uiMode === mode ? styles.modeBtnActive : ''}`}
-                        onClick={() => updatePanelSettings(slot, { uiMode: mode })}
+                        onClick={() => updatePanelSettings(activeApp, slot, { uiMode: mode })}
                       >
                         <img src={icon} alt={label} width={16} height={16} className={styles.modeIcon} />
                         <span>{label}</span>
@@ -132,7 +132,7 @@ export function AllocationTab({ initialApp }: Props) {
                             <button
                               key={shape}
                               className={`${styles.modeBtn} ${ps.iconShape === shape ? styles.modeBtnActive : ''}`}
-                              onClick={() => updatePanelSettings(slot, { iconShape: shape })}
+                              onClick={() => updatePanelSettings(activeApp, slot, { iconShape: shape })}
                             >
                               <img src={icon} alt={label} width={16} height={16} className={styles.modeIcon} />
                               <span>{label}</span>
@@ -160,7 +160,7 @@ export function AllocationTab({ initialApp }: Props) {
                     </select>
                     <select
                       value={ps.columns}
-                      onChange={(e) => updatePanelSettings(slot, { columns: Number(e.target.value) })}
+                      onChange={(e) => updatePanelSettings(activeApp, slot, { columns: Number(e.target.value) })}
                       className={styles.colSelect}
                       disabled={ps.uiMode !== 'icon'}
                       title={ps.uiMode !== 'icon' ? 'Column count only applies in Icon mode' : undefined}
@@ -182,7 +182,7 @@ export function AllocationTab({ initialApp }: Props) {
                     type="range"
                     min={10} max={128}
                     value={ps.scale}
-                    onChange={(e) => updatePanelSettings(slot, { scale: Number(e.target.value) })}
+                    onChange={(e) => updatePanelSettings(activeApp, slot, { scale: Number(e.target.value) })}
                     className={styles.slider}
                   />
                 </div>
@@ -197,7 +197,7 @@ export function AllocationTab({ initialApp }: Props) {
                     type="range"
                     min={0} max={32}
                     value={ps.spacing}
-                    onChange={(e) => updatePanelSettings(slot, { spacing: Number(e.target.value) })}
+                    onChange={(e) => updatePanelSettings(activeApp, slot, { spacing: Number(e.target.value) })}
                     className={styles.slider}
                   />
                 </div>
@@ -207,7 +207,7 @@ export function AllocationTab({ initialApp }: Props) {
                   <span className={styles.toggleLabel}>Flip to Reorder</span>
                   <button
                     className={`${styles.toggleBtn} ${ps.flipToReorder ? styles.toggleOn : ''}`}
-                    onClick={() => updatePanelSettings(slot, { flipToReorder: !ps.flipToReorder })}
+                    onClick={() => updatePanelSettings(activeApp, slot, { flipToReorder: !ps.flipToReorder })}
                     role="switch"
                     aria-checked={ps.flipToReorder}
                   >

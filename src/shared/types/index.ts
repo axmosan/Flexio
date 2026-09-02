@@ -65,7 +65,7 @@ export type UIMode = 'icon' | 'icon+name' | 'name'
 /** 'rounded' = icons cropped to a rounded square, 'crisp' = sharp square corners */
 export type IconShape = 'rounded' | 'crisp'
 
-// ─── Per-panel settings (per-slot, not per-app) ──────────────────────────────
+// ─── Per-panel settings (per-app, per-slot) ──────────────────────────────────
 export interface PanelSettings {
   /** Scale in px: button size for icon mode, row/font scale for list modes (32–128) */
   scale: number
@@ -83,14 +83,17 @@ export interface PanelSettings {
 
 export type PanelSettingsMap = Record<PanelSlot, PanelSettings>
 
+/** Visual settings are stored per host app so the same slot can differ per app */
+export type AppPanelSettingsMap = Record<AppName, PanelSettingsMap>
+
 // ─── Root data structure (flexio-blueprints.json) ────────────────────────────
 export interface BlueprintsData {
   version: string
   lastModified: string
   /** Per-app, per-slot toolset assignment */
   allocation: Record<AppName, AllocationMap>
-  /** Per-slot visual settings (independent of which app is running) */
-  panelSettings: PanelSettingsMap
+  /** Per-app, per-slot visual settings */
+  panelSettings: AppPanelSettingsMap
   apps: Record<AppName, AppData>
 }
 

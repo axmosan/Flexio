@@ -6,9 +6,14 @@
  * Import: decode → restore files → merge blueprints → reload
  */
 import { nfs, npath, ensureDir, listFilesRecursive } from './nodeEnv'
-import { getFlexioRoot, getScriptsRoot, getBlueprintsPath } from './paths'
-import { saveBlueprints, loadBlueprints } from './blueprints'
-import type { BlueprintsData } from '../types'
+import { getFlexioRoot, getScriptsRoot } from './paths'
+import {
+  saveBlueprints,
+  loadBlueprints,
+  isSlotKeyedPanelSettings,
+  normalizePanelSettings,
+} from './blueprints'
+import type { AppPanelSettingsMap, BlueprintsData, PanelSettingsMap } from '../types'
 import type { ConflictMode } from '../types'
 import { APP_NAMES, PANEL_SLOTS } from '../types'
 
@@ -25,10 +30,9 @@ export interface FlexPreset {
 
 export async function exportFlex(destPath: string): Promise<void> {
   const root = getFlexioRoot()
-  const blueprintsPath = getBlueprintsPath()
-  const blueprints: BlueprintsData = nfs.existsSync(blueprintsPath)
-    ? (JSON.parse(nfs.readFileSync(blueprintsPath, 'utf8')) as BlueprintsData)
-    : ({} as BlueprintsData)
+  // Read through loadBlueprints so the preset always carries the current
+  // shape (per-app panel settings), never a legacy one straight off disk.
+  const blueprints: BlueprintsData = loadBlueprints()
 
   const scripts: Record<string, string> = {}
   const scriptsRoot = getScriptsRoot()
@@ -140,16 +144,28 @@ export async function importFlex(jsonPath: string, mode: ConflictMode): Promise<
     merged.apps = { ...merged.apps, [app]: { toolsets: mergedToolsets } }
   }
 
-  // Merge panel settings (incoming values take priority for new fields)
-  if (incoming.panelSettings) {
-    for (const slot of PANEL_SLOTS) {
-      if (incoming.panelSettings[slot]) {
-        merged.panelSettings = {
-          ...merged.panelSettings,
-          [slot]: { ...merged.panelSettings[slot], ...incoming.panelSettings[slot] },
+  // Merge panel settings (incoming values take priority for new fields).
+  // Presets exported before per-app settings existed carry a single slot-keyed
+  // map that every app shared; apply it to all four apps.
+  const incomingPS = incoming.panelSettings as
+    | AppPanelSettingsMap
+    | PanelSettingsMap
+    | undefined
+  if (incomingPS) {
+    const slotKeyed = isSlotKeyedPanelSettings(incomingPS) ? incomingPS : null
+    const mergedPS = { ...merged.panelSettings } as AppPanelSettingsMap
+    for (const app of APP_NAMES) {
+      const inSlots = slotKeyed ?? (incomingPS as AppPanelSettingsMap)[app]
+      if (!inSlots) continue
+      const slots = { ...mergedPS[app] } as PanelSettingsMap
+      for (const slot of PANEL_SLOTS) {
+        if (inSlots[slot]) {
+          slots[slot] = normalizePanelSettings({ ...slots[slot], ...inSlots[slot] })
         }
       }
+      mergedPS[app] = slots
     }
+    merged.panelSettings = mergedPS
   }
 
   saveBlueprints(merged)

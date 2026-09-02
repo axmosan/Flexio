@@ -2,6 +2,7 @@ import { nfs } from './nodeEnv'
 import { ensureDir } from './nodeEnv'
 import { getBlueprintsPath, getFlexioRoot } from './paths'
 import type {
+  AppPanelSettingsMap,
   BlueprintsData,
   PanelSettings,
   PanelSettingsMap,
@@ -35,6 +36,12 @@ function defaultPanelSettingsMap(): PanelSettingsMap {
   }
 }
 
+function defaultAppPanelSettings(): AppPanelSettingsMap {
+  const map = {} as AppPanelSettingsMap
+  for (const app of APP_NAMES) map[app] = defaultPanelSettingsMap()
+  return map
+}
+
 export function getDefaultBlueprints(): BlueprintsData {
   const apps = {} as BlueprintsData['apps']
   const allocation = {} as BlueprintsData['allocation']
@@ -46,9 +53,59 @@ export function getDefaultBlueprints(): BlueprintsData {
     version: '1.2.0',
     lastModified: new Date().toISOString(),
     allocation,
-    panelSettings: defaultPanelSettingsMap(),
+    panelSettings: defaultAppPanelSettings(),
     apps,
   }
+}
+
+// ─── panelSettings normalisation / migration ─────────────────────────────────
+
+/** Fill in any field a stored (or imported) panel settings object is missing. */
+export function normalizePanelSettings(s?: Partial<PanelSettings> | null): PanelSettings {
+  const d = defaultPanelSettings()
+  if (!s) return d
+  // Field by field: a missing key must fall back to the default, and `false`
+  // / `0` are legitimate stored values that must survive.
+  return {
+    scale:         s.scale         ?? d.scale,
+    spacing:       s.spacing       ?? d.spacing,
+    flipToReorder: s.flipToReorder ?? d.flipToReorder,
+    uiMode:        s.uiMode        ?? d.uiMode,
+    iconShape:     s.iconShape     ?? d.iconShape,
+    columns:       s.columns       ?? d.columns,
+  }
+}
+
+/**
+ * Up to v1.2 `panelSettings` was keyed by slot only, so every host app shared
+ * one set of visual settings. The current shape is keyed by app first.
+ * Slot keys at the top level mean we are looking at the old shape.
+ */
+export function isSlotKeyedPanelSettings(
+  ps: AppPanelSettingsMap | PanelSettingsMap,
+): ps is PanelSettingsMap {
+  return PANEL_SLOTS.some((slot) => slot in ps)
+}
+
+/** Expand any stored/imported shape into a full per-app, per-slot map. */
+function toAppPanelSettings(
+  ps: AppPanelSettingsMap | PanelSettingsMap | undefined,
+  fallback: PanelSettings,
+): AppPanelSettingsMap {
+  const slotKeyed = ps && isSlotKeyedPanelSettings(ps) ? ps : null
+  const appKeyed  = ps && !slotKeyed ? (ps as AppPanelSettingsMap) : null
+
+  const result = {} as AppPanelSettingsMap
+  for (const app of APP_NAMES) {
+    const slots = {} as PanelSettingsMap
+    for (const slot of PANEL_SLOTS) {
+      // Slot-keyed data predates per-app settings: every app inherits a copy.
+      const stored = slotKeyed ? slotKeyed[slot] : appKeyed?.[app]?.[slot]
+      slots[slot] = stored ? normalizePanelSettings(stored) : { ...fallback }
+    }
+    result[app] = slots
+  }
+  return result
 }
 
 // ─── Load ────────────────────────────────────────────────────────────────────
@@ -58,7 +115,8 @@ export function loadBlueprints(): BlueprintsData {
   try {
     if (!nfs.existsSync(path)) return getDefaultBlueprints()
     const raw = nfs.readFileSync(path, 'utf8')
-    const parsed = JSON.parse(raw) as BlueprintsData & {
+    const parsed = JSON.parse(raw) as Omit<BlueprintsData, 'panelSettings'> & {
+      panelSettings?: AppPanelSettingsMap | PanelSettingsMap
       // Legacy fields that may be present
       settings?: { buttonScale?: number; buttonSpacing?: number; flipToReorder?: boolean }
       panelColumns?: Record<string, Record<string, number>>
@@ -70,45 +128,20 @@ export function loadBlueprints(): BlueprintsData {
       if (!parsed.allocation[app]) parsed.allocation[app] = defaultAllocation()
     }
 
-    // ── Migrate legacy structure → panelSettings ──────────────────────────────
-    if (!parsed.panelSettings) {
-      // Carry old global values forward as per-slot defaults
-      const oldScale    = parsed.settings?.buttonScale   ?? 64
-      const oldSpacing  = parsed.settings?.buttonSpacing ?? 8
-      const oldFlip     = parsed.settings?.flipToReorder ?? false
+    // ── Migrate every historical shape → per-app, per-slot panelSettings ─────
+    // v1.0: one global `settings` object; v1.1–v1.2: keyed by slot only.
+    const legacyBase = normalizePanelSettings({
+      scale:         parsed.settings?.buttonScale,
+      spacing:       parsed.settings?.buttonSpacing,
+      flipToReorder: parsed.settings?.flipToReorder,
+    })
+    const panelSettings = toAppPanelSettings(parsed.panelSettings, legacyBase)
 
-      parsed.panelSettings = {} as PanelSettingsMap
-      for (const slot of PANEL_SLOTS) {
-        parsed.panelSettings[slot] = {
-          scale: oldScale,
-          spacing: oldSpacing,
-          flipToReorder: oldFlip,
-          uiMode: 'icon',
-          iconShape: 'rounded',
-          columns: 0,
-        }
-      }
-      // Drop legacy fields
-      delete parsed.settings
-      delete parsed.panelColumns
-    } else {
-      // Ensure all slots exist and all fields are present (forward-compat)
-      for (const slot of PANEL_SLOTS) {
-        if (!parsed.panelSettings[slot]) {
-          parsed.panelSettings[slot] = defaultPanelSettings()
-        } else {
-          const s = parsed.panelSettings[slot]
-          if (s.scale        === undefined) s.scale        = 64
-          if (s.spacing      === undefined) s.spacing      = 8
-          if (s.flipToReorder === undefined) s.flipToReorder = false
-          if (s.uiMode       === undefined) s.uiMode       = 'icon'
-          if (s.iconShape    === undefined) s.iconShape    = 'rounded'
-          if (s.columns      === undefined) s.columns      = 0
-        }
-      }
-    }
+    // Drop legacy fields
+    delete parsed.settings
+    delete parsed.panelColumns
 
-    return parsed as BlueprintsData
+    return { ...parsed, panelSettings } as BlueprintsData
   } catch {
     return getDefaultBlueprints()
   }

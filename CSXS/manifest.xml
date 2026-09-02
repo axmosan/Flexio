@@ -158,7 +158,9 @@
       </DispatchInfo>
     </Extension>
 
-    <!-- Settings Window — Modeless floating dialog -->
+    <!-- Settings Window — Modeless floating dialog.
+         No <Menu> element → not listed under Window/Extensions; the window is
+         opened programmatically from a panel's gear button via requestOpenExtension. -->
     <Extension Id="com.flexio.settings">
       <DispatchInfo>
         <Resources>
@@ -176,7 +178,6 @@
         </Lifecycle>
         <UI>
           <Type>Modeless</Type>
-          <Menu>Flexio Settings</Menu>
           <Geometry>
             <Size>
               <Height>700</Height>

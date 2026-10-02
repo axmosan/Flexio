@@ -50,7 +50,7 @@ export function getDefaultBlueprints(): BlueprintsData {
     allocation[app] = defaultAllocation()
   }
   return {
-    version: '1.2.2',
+    version: '1.2.3',
     lastModified: new Date().toISOString(),
     allocation,
     panelSettings: defaultAppPanelSettings(),

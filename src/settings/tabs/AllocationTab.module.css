@@ -138,7 +138,7 @@
   opacity: 1;
 }
 
-/* ── Toolkit + columns row ──────────────────────────────────────────────────── */
+/* ── Toolset + columns row ──────────────────────────────────────────────────── */
 .fieldRow {
   display: flex;
   align-items: center;
@@ -153,13 +153,13 @@
   flex-shrink: 0;
 }
 
-.toolkitRow {
+.toolsetRow {
   flex: 1;
   display: flex;
   gap: 6px;
 }
 
-.toolkitSelect {
+.toolsetSelect {
   flex: 1;
   font-size: 11px;
   padding: 3px 6px;

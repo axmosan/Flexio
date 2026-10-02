@@ -144,14 +144,14 @@ export function AllocationTab({ initialApp }: Props) {
                   </AnimatePresence>
                 </div>
 
-                {/* Toolkit + Columns */}
+                {/* Toolset + Columns */}
                 <div className={styles.fieldRow}>
-                  <label className={styles.fieldLabel}>Toolkit</label>
-                  <div className={styles.toolkitRow}>
+                  <label className={styles.fieldLabel}>Toolset</label>
+                  <div className={styles.toolsetRow}>
                     <select
                       value={blueprints.allocation[activeApp][slot]}
                       onChange={(e) => updateAllocation(activeApp, { [slot]: e.target.value })}
-                      className={styles.toolkitSelect}
+                      className={styles.toolsetSelect}
                     >
                       <option value="">— Unassigned —</option>
                       {toolsets.map((ts) => (

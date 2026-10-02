@@ -17,7 +17,7 @@ After Effects has KBar; the rest of the Adobe suite has nothing comparable, so a
 
 ## Setup
 
-**Install.** Download a release, run the bundled installer, and restart the host application. The panel appears under **Window ▸ Extensions ▸ Flexio**. Unsigned panels need CEP `PlayerDebugMode` enabled.
+**Install.** Download a release, run the bundled installer, and restart the host application. The panel appears under **Window ▸ Extensions ▸ Flexio**. Releases are signed, so CEP `PlayerDebugMode` is not needed. Each release also ships a `.zxp` for ZXP installers.
 
 **Develop.** The panel is React and TypeScript built with Vite. Clone the repository, then:
 

@@ -3,3 +3,4 @@ certs/
 .claude/
 references/
 release/
+.package-staging/
